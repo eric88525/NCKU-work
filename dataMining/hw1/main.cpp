@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <unordered_map>
+#include <map>
 #include <fstream>
 #include <algorithm>
 
@@ -13,24 +13,24 @@ class treeNode
 {
 
 public:
-    int item;
+    string item;
     treeNode *parent;
-    unordered_map<int, treeNode *> childs;
+    map<string, treeNode *> childs;
     int count;
-
+    treeNode *nextHomonym;
     treeNode()
     {
-        parent = NULL;
-        childs = unordered_map<int, treeNode *>();
-        count = -1;
-        item = -1;
+        this->parent = NULL;
+        this->count = -1;
+        this->item = "root";
+        this->nextHomonym = NULL;
     }
-    treeNode(treeNode *parent, int item)
+    treeNode(treeNode *parent, string item)
     {
-        parent = parent;
-        childs = unordered_map<int, treeNode *>();
-        count = 1;
-        item = item;
+        this->parent = parent;
+        this->count = 1;
+        this->item = item;
+        this->nextHomonym = NULL;
     }
 };
 
@@ -41,19 +41,21 @@ public:
     treeNode *root;
     int minSup;
 
-    unordered_map<int, int> frequency;
-    unordered_map<int, vector<treeNode *>> itemPointers;
+    map<string, int> frequency;
+    // record previous node of item
+    map<string, treeNode *> itemPointers;
 
-    vector<pair<int, int>> itemOrder;
+    vector<string> itemOrder;
 
     fpTree(int minSup) : minSup(minSup)
     {
-        frequency = unordered_map<int, int>({});
-        itemPointers = unordered_map<int, vector<treeNode *>>({});
-        root = new treeNode();
+        this->frequency = {};
+        this->itemPointers = {};
+        this->itemOrder = {};
+        this->root = new treeNode();
     }
     // quick sort
-    void sortByFreq(vector<int> &transation, int low, int high)
+    void sortByFreq(vector<string> &transation, int low, int high)
     {
         if (low < high)
         {
@@ -63,7 +65,7 @@ public:
         }
     }
 
-    int partition(vector<int> &arr, int low, int high)
+    int partition(vector<string> &arr, int low, int high)
     {
         int pivot = frequency[arr[high]];
         int i = low - 1;
@@ -79,99 +81,147 @@ public:
         swap(arr[i + 1], arr[high]);
         return i + 1;
     }
-    vector<int> removeUnFreq(const vector<int> &transation)
+    vector<string> removeUnFreq(const vector<string> &transation)
     {
-        vector<int> result;
+        vector<string> result;
         for (auto t : transation)
         {
-            if (frequency[t] >= minSup)
+            if (frequency.count(t) && frequency[t] >= minSup)
                 result.push_back(t);
         }
         return result;
     }
-    void addNode(vector<int> transation)
+    void addNode(vector<vector<string>> transations)
     {
-        treeNode *p = root;
-        treeNode *parent = p;
-
-        transation = removeUnFreq(transation);
-        sortByFreq(transation, 0, transation.size() - 1);
-
-        for (auto item : transation)
+        for (auto transation : transations)
         {
+            treeNode *p = root;
+            treeNode *parent = p;
 
-            if (p->childs.count(item))
+            transation = removeUnFreq(transation);
+
+            sortByFreq(transation, 0, transation.size() - 1);
+
+            for (auto item : transation)
             {
-                p = p->childs[item];
-                p->count++;
-            }
-            else
-            {
-                parent = p;
-                treeNode *newItem = new treeNode(parent, item);
-                p->childs[item] = newItem;
-                itemPointers[item].push_back(newItem);
-                p = p->childs[item];
+
+                if (p->childs.count(item))
+                {
+                    p = p->childs[item];
+                    p->count++;
+                }
+                else
+                {
+                    // create new node
+                    parent = p;
+                    treeNode *newItem = new treeNode(parent, item);
+
+                    // let nextHomonym point to previous item
+                    if (itemPointers.count(item))
+                    {
+                        newItem->nextHomonym = itemPointers[item];
+                    }
+                    itemPointers[item] = newItem;
+
+                    // go to child
+                    p->childs[item] = newItem;
+                    p = p->childs[item];
+                }
             }
         }
     }
-    // list item from high freq to low freq
-    // without unfreq item
+    // sort all item from high freq to low freq & remove unfreq item
     void createOrder()
     {
-        vector<int> allItems;
-        for (auto &i : frequency)
+        vector<string> allItems;
+
+        for (auto i : frequency)
         {
-            if (frequency[i.first] < minSup)
-                continue;
-            allItems.push_back(i.first);
+            string temp = i.first;
+            allItems.push_back(temp);
         }
-        sortByFreq(allItems, 0, allItems.size());
-        for (auto x : allItems)
-            cout << x << " ";
-        cout << "\n";
-    }
-    //
-    void countItems(vector<vector<int>> datas)
-    {
-        unordered_map<int, int> temp;
-        for (auto &transation : datas)
-        {
-            for (auto &item : transation)
-                frequency[item]++;
-        }
-        for (auto &i : frequency)
-        {
-            if (i.second > minSup)
-            {
-                temp[i.first] = i.second;
-            }
-        }
-        frequency = temp;
-        createOrder();
+
+        sortByFreq(allItems, 0, allItems.size() - 1);
+        itemOrder = allItems;
     }
 
-    void findFreq(int item)
+    // build map of < item : frequency> and create order
+    void countItems(vector<vector<string>> datas)
     {
+        map<string, int> temp;
+        for (auto const &transation : datas)
+        {
+            for (auto const &item : transation)
+                temp[item]++;
+        }
+        for (auto i : temp)
+        {
+            if (i.second >= minSup)
+            {
+                frequency[i.first] = i.second;
+            }
+        }
+        createOrder();
+    }
+    // find freq itemset by limit
+    void fpMining(float confident, float support)
+    {
+        for (auto item : itemOrder)
+        {
+            fpTree tree = condTree(item);
+        }
+    }
+    // create cond tree of item
+    fpTree condTree(string item)
+    {
+        fpTree tree(minSup);
+
+        vector<vector<string>> newTransations;
+
+        treeNode *n = itemPointers[item];
+
+        while (n)
+        {
+            int pCount = n->count;
+
+            vector<string> preNodes;
+
+            treeNode *p = n->parent;
+
+            while (p->parent)
+            {
+                preNodes.push_back(p->item);
+                p = p->parent;
+            }
+            while (pCount--)
+            {
+                newTransations.push_back(preNodes);
+            }
+            n = n->nextHomonym;
+        }
+        tree.countItems(newTransations);
+        tree.addNode(newTransations);
+        return tree;
     }
 };
 
 // get all transations
-vector<vector<int>> readData(string filePath)
+vector<vector<string>> readData(string filePath)
 {
 
-    int id, tranID, item;
+    int id, tranID;
+    string item;
 
     ifstream infile(filePath);
 
-    unordered_map<int, vector<int>> datas;
+    map<int, vector<string>> datas;
 
     while (infile >> id >> tranID >> item)
     {
         datas[tranID].push_back(item);
     }
 
-    vector<vector<int>> result;
+    vector<vector<string>> result;
 
     for (auto &d : datas)
     {
@@ -186,17 +236,17 @@ void showTree(fpTree &tree)
 
     treeNode *root = tree.root;
     list.push(root);
-
-    while (!list.empty())
+    cout << "[root]";
+    while (list.size())
     {
-        cout << "\n=====================\n";
+
         int n = list.size();
+
+        cout << "\n=====================\n";
         while (n--)
         {
             treeNode *curr = list.front();
             list.pop();
-
-            int c = curr->childs.size();
             for (auto item : curr->childs)
             {
                 cout << "[" << item.first << "," << item.second->count << "] ";
@@ -205,44 +255,43 @@ void showTree(fpTree &tree)
         }
     }
 
-    for (auto i : tree.itemPointers)
+    for (auto i : tree.itemOrder)
     {
-        cout << i.first << " " << i.second.size() << endl;
+        cout << i << " freq= " << tree.frequency[i] << "\n";
     }
 }
 
 int main()
 {
 
-    treeNode a(NULL, 1);
-
     // create tree
-    fpTree tree(5);
+    fpTree tree(2);
 
     // read data
-    //vector<vector<int>> datas = readData("./data.txt");
+    //vector<vector<string>> datas = readData("./data.txt");
 
-    // Milk : 0 Bread:1 Beer : 2 Coffee: 3 Egg : 4
-    vector<vector<int>> datas = {
-        {0, 1, 2},
-        {1, 3},
-        {1, 4},
-        {0, 1, 3},
-        {0, 4},
-        {1, 4},
-        {0, 4},
-        {0, 1, 4, 2},
-        {0, 1, 4},
+    vector<vector<string>> datas = {
+        {"milk", "bread", "beer"},
+        {"bread", "coffee"},
+        {"bread", "egg"},
+        {"milk", "bread", "coffee"},
+        {"milk", "egg"},
+        {"bread", "egg"},
+        {"milk", "egg"},
+        {"milk", "bread", "egg", "beer"},
+        {"milk", "bread", "egg"},
     };
 
     // count items
     tree.countItems(datas);
 
     // create tree
-    for (auto &d : datas)
-        tree.addNode(d);
+    tree.addNode(datas);
 
     float confident = 0.5, support = 1;
 
     showTree(tree);
+
+    fpTree t2 = tree.condTree("milk");
+    showTree(t2);
 }
