@@ -39,9 +39,12 @@ class fpTree
 
 public:
     treeNode *root;
-    unordered_map<int, int> frequency;
     int minSup;
+
+    unordered_map<int, int> frequency;
     unordered_map<int, vector<treeNode *>> itemPointers;
+
+    vector<pair<int, int>> itemOrder;
 
     fpTree(int minSup) : minSup(minSup)
     {
@@ -112,11 +115,44 @@ public:
             }
         }
     }
-
-    void countItems(vector<int> transation)
+    // list item from high freq to low freq
+    // without unfreq item
+    void createOrder()
     {
-        for (auto &item : transation)
-            frequency[item]++;
+        vector<int> allItems;
+        for (auto &i : frequency)
+        {
+            if (frequency[i.first] < minSup)
+                continue;
+            allItems.push_back(i.first);
+        }
+        sortByFreq(allItems, 0, allItems.size());
+        for (auto x : allItems)
+            cout << x << " ";
+        cout << "\n";
+    }
+    //
+    void countItems(vector<vector<int>> datas)
+    {
+        unordered_map<int, int> temp;
+        for (auto &transation : datas)
+        {
+            for (auto &item : transation)
+                frequency[item]++;
+        }
+        for (auto &i : frequency)
+        {
+            if (i.second > minSup)
+            {
+                temp[i.first] = i.second;
+            }
+        }
+        frequency = temp;
+        createOrder();
+    }
+
+    void findFreq(int item)
+    {
     }
 };
 
@@ -181,7 +217,7 @@ int main()
     treeNode a(NULL, 1);
 
     // create tree
-    fpTree tree(2);
+    fpTree tree(5);
 
     // read data
     //vector<vector<int>> datas = readData("./data.txt");
@@ -200,8 +236,7 @@ int main()
     };
 
     // count items
-    for (auto &d : datas)
-        tree.countItems(d);
+    tree.countItems(datas);
 
     // create tree
     for (auto &d : datas)
