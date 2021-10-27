@@ -4,7 +4,7 @@
 #include <map>
 #include <fstream>
 #include <algorithm>
-
+#include <set>
 #include <queue>
 
 using namespace std;
@@ -34,10 +34,26 @@ public:
     }
 };
 
+class assoInfo
+{
+public:
+    set<string> itemSet;
+    int support;
+    float confidence;
+    assoInfo() : itemSet({}), support(0), confidence(0) {}
+    assoInfo(const assoInfo &p1)
+    {
+        itemSet = p1.itemSet;
+        support = 0;
+        confidence = 0;
+    }
+};
+
 class fpTree
 {
 
 public:
+    static int transCount;
     treeNode *root;
     int minSup;
 
@@ -142,6 +158,8 @@ public:
         }
 
         sortByFreq(allItems, 0, allItems.size() - 1);
+        // from low freq to high freq
+        reverse(allItems.begin(), allItems.end());
         itemOrder = allItems;
     }
 
@@ -164,21 +182,37 @@ public:
         createOrder();
     }
     // find freq itemset by limit
-    void fpMining(float confident, float support)
+    vector<assoInfo> fpMining(assoInfo history = assoInfo())
     {
+
+        vector<assoInfo> result;
+
         for (auto item : itemOrder)
         {
-            fpTree tree = condTree(item);
+            // make a copy of history
+            assoInfo newHistory = history;
+
+            // create cond tree by item
+            treeNode *n = itemPointers[item];
+            fpTree cTree = condTree(n);
+
+            // add current item
+            newHistory.itemSet.insert(item);
+            newHistory.support = this->itemPointers[item]->count;
+
+            // recursive
+            vector<assoInfo> temp = cTree.fpMining(newHistory);
+            result.insert(result.end(), temp.begin(), temp.end());
         }
+        return result;
     }
+
     // create cond tree of item
-    fpTree condTree(string item)
+    fpTree condTree(treeNode *n)
     {
         fpTree tree(minSup);
 
         vector<vector<string>> newTransations;
-
-        treeNode *n = itemPointers[item];
 
         while (n)
         {
@@ -290,8 +324,8 @@ int main()
 
     float confident = 0.5, support = 1;
 
-    showTree(tree);
+    // showTree(tree);
 
-    fpTree t2 = tree.condTree("milk");
-    showTree(t2);
+    // fpTree t2 = tree.condTree("milk");
+    //   showTree(t2);
 }
