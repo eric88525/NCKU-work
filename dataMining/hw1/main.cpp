@@ -1,4 +1,4 @@
-#include "fpGrowth.hpp"
+#include "fpGrowth.h"
 
 // get all transations
 vector<vector<string>> readData(string filePath)
@@ -23,40 +23,9 @@ vector<vector<string>> readData(string filePath)
     }
     return result;
 }
-// show tree structure
-void showTree(fpTree &tree)
-{
-    queue<treeNode *> list;
-
-    treeNode *root = tree.root;
-    list.push(root);
-    cout << "[root]";
-    while (list.size())
-    {
-
-        int n = list.size();
-
-        cout << "\n=====================\n";
-        while (n--)
-        {
-            treeNode *curr = list.front();
-            list.pop();
-            for (auto item : curr->childs)
-            {
-                cout << "[" << item.first << "," << item.second->count << "] ";
-                list.push(item.second);
-            }
-        }
-    }
-
-    for (auto i : tree.itemOrder)
-    {
-        cout << i << " freq= " << tree.frequency[i] << "\n";
-    }
-}
 
 // given itemset { 1, 2, 3}
-// return all combination  of {} => {}
+// return all combination  of {} => {} ex. like {1}=>{2,3}
 vector<pair<string, string>> allCombination(const set<string> &freqItemSet)
 {
     vector<pair<string, string>> result;
@@ -104,7 +73,10 @@ void printResult(map<string, int> itemFrequency, const vector<assoInfo> &freqSet
 
     int totalCounts = 0;
 
-    unordered_map<string, float> ruleCount;
+    map<string, float> ruleCount;
+
+    ofstream rulefile;
+    rulefile.open("./rule.txt");
 
     // create itemset:freq map
     for (auto const &fSet : freqSet)
@@ -114,11 +86,14 @@ void printResult(map<string, int> itemFrequency, const vector<assoInfo> &freqSet
             k += item + ", ";
 
         ruleCount[k] = fSet.support;
+        rulefile << k << " | " << fSet.support << "\n";
     }
+    rulefile.close();
 
     myfile << " Sup  | Conf  | Rule\n";
     myfile << "====================\n";
-    // filte with confidence & print reuslt to file
+
+    //  confidence filter & print reuslt to file
     for (auto const &itSet : freqSet)
     {
         auto allCombs = allCombination(itSet.itemSet);
@@ -126,13 +101,13 @@ void printResult(map<string, int> itemFrequency, const vector<assoInfo> &freqSet
         for (auto const &comb : allCombs)
         {
 
-            float sup = itSet.support / transCount;
-            float confi = itSet.support / ruleCount[comb.first];
+            float sup = float(itSet.support) / transCount;
+            float confi = float(itSet.support) / ruleCount[comb.first];
 
             if (confi < minConfidence)
                 continue;
 
-            myfile << setprecision(3) << setw(5) << sup << " | " << setw(5) << confi << " | ";
+            myfile << setprecision(4) << setw(5) << sup << " | " << setw(5) << confi << " | ";
             myfile << "{ " << comb.first << "} => { " << comb.second << "}\n";
 
             totalCounts++;
@@ -145,22 +120,30 @@ void printResult(map<string, int> itemFrequency, const vector<assoInfo> &freqSet
 int main()
 {
 
-    float minSupport = 0.4, confidence = 0.2;
+    float minSupport = 0.1, confidence = 0.2;
 
     // read data
     vector<vector<string>> datas = readData("./data.txt");
 
+    /*  vector<vector<string>> datas = {
+        {"milk", "bread", "beer"},
+        {"bread", "coffee"},
+        {"bread", "egg"},
+        {"milk", "bread", "coffee"},
+        {"milk", "egg"},
+        {"bread", "egg"},
+        {"milk", "egg"},
+        {"milk", "bread", "egg", "beer"},
+        {"milk", "bread", "egg"},
+    };*/
     // create tree
+    //fpTree tree(minSupport * datas.size());
     fpTree tree(int(datas.size() * minSupport));
+    // build tree
+    tree.buildTree(datas);
 
-    // count items
-    tree.countItems(datas);
+    auto tree_ans = tree.fpMining();
 
-    // create tree
-    tree.addNode(datas);
-
-    auto ans = tree.fpMining();
-
-    printResult(tree.frequency, ans, "./fp_result.txt", minSupport, confidence, datas.size());
+    printResult(tree.frequency, tree_ans, "./fp_result.txt", minSupport, confidence, datas.size());
     int x = 0;
 }
