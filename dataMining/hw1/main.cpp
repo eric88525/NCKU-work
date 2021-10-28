@@ -1,248 +1,8 @@
-#include <iostream>
-#include <vector>
-#include <string>
-#include <map>
-#include <fstream>
-#include <algorithm>
-#include <set>
-#include <queue>
-
-using namespace std;
-
-class treeNode
-{
-
-public:
-    string item;
-    treeNode *parent;
-    map<string, treeNode *> childs;
-    int count;
-    treeNode *nextHomonym;
-    treeNode()
-    {
-        this->parent = NULL;
-        this->count = -1;
-        this->item = "root";
-        this->nextHomonym = NULL;
-    }
-    treeNode(treeNode *parent, string item)
-    {
-        this->parent = parent;
-        this->count = 1;
-        this->item = item;
-        this->nextHomonym = NULL;
-    }
-};
-
-class assoInfo
-{
-public:
-    set<string> itemSet;
-    int support;
-    float confidence;
-    assoInfo() : itemSet({}), support(0), confidence(0) {}
-    assoInfo(const assoInfo &p1)
-    {
-        itemSet = p1.itemSet;
-        support = 0;
-        confidence = 0;
-    }
-};
-
-class fpTree
-{
-
-public:
-    static int transCount;
-    treeNode *root;
-    int minSup;
-
-    map<string, int> frequency;
-    // record previous node of item
-    map<string, treeNode *> itemPointers;
-
-    vector<string> itemOrder;
-
-    fpTree(int minSup) : minSup(minSup)
-    {
-        this->frequency = {};
-        this->itemPointers = {};
-        this->itemOrder = {};
-        this->root = new treeNode();
-    }
-    // quick sort
-    void sortByFreq(vector<string> &transation, int low, int high)
-    {
-        if (low < high)
-        {
-            int pi = partition(transation, low, high);
-            sortByFreq(transation, low, pi - 1);
-            sortByFreq(transation, pi + 1, high);
-        }
-    }
-
-    int partition(vector<string> &arr, int low, int high)
-    {
-        int pivot = frequency[arr[high]];
-        int i = low - 1;
-
-        for (int j = low; j < high; j++)
-        {
-            if (frequency[arr[j]] > pivot)
-            {
-                i++;
-                swap(arr[i], arr[j]);
-            }
-        }
-        swap(arr[i + 1], arr[high]);
-        return i + 1;
-    }
-    vector<string> removeUnFreq(const vector<string> &transation)
-    {
-        vector<string> result;
-        for (auto t : transation)
-        {
-            if (frequency.count(t) && frequency[t] >= minSup)
-                result.push_back(t);
-        }
-        return result;
-    }
-    void addNode(vector<vector<string>> transations)
-    {
-        for (auto transation : transations)
-        {
-            treeNode *p = root;
-            treeNode *parent = p;
-
-            transation = removeUnFreq(transation);
-
-            sortByFreq(transation, 0, transation.size() - 1);
-
-            for (auto item : transation)
-            {
-
-                if (p->childs.count(item))
-                {
-                    p = p->childs[item];
-                    p->count++;
-                }
-                else
-                {
-                    // create new node
-                    parent = p;
-                    treeNode *newItem = new treeNode(parent, item);
-
-                    // let nextHomonym point to previous item
-                    if (itemPointers.count(item))
-                    {
-                        newItem->nextHomonym = itemPointers[item];
-                    }
-                    itemPointers[item] = newItem;
-
-                    // go to child
-                    p->childs[item] = newItem;
-                    p = p->childs[item];
-                }
-            }
-        }
-    }
-    // sort all item from high freq to low freq & remove unfreq item
-    void createOrder()
-    {
-        vector<string> allItems;
-
-        for (auto i : frequency)
-        {
-            string temp = i.first;
-            allItems.push_back(temp);
-        }
-
-        sortByFreq(allItems, 0, allItems.size() - 1);
-        // from low freq to high freq
-        reverse(allItems.begin(), allItems.end());
-        itemOrder = allItems;
-    }
-
-    // build map of < item : frequency> and create order
-    void countItems(vector<vector<string>> datas)
-    {
-        map<string, int> temp;
-        for (auto const &transation : datas)
-        {
-            for (auto const &item : transation)
-                temp[item]++;
-        }
-        for (auto i : temp)
-        {
-            if (i.second >= minSup)
-            {
-                frequency[i.first] = i.second;
-            }
-        }
-        createOrder();
-    }
-    // find freq itemset by limit
-    vector<assoInfo> fpMining(assoInfo history = assoInfo())
-    {
-
-        vector<assoInfo> result;
-
-        for (auto item : itemOrder)
-        {
-            // make a copy of history
-            assoInfo newHistory = history;
-
-            // create cond tree by item
-            treeNode *n = itemPointers[item];
-            fpTree cTree = condTree(n);
-
-            // add current item
-            newHistory.itemSet.insert(item);
-            newHistory.support = this->itemPointers[item]->count;
-
-            // recursive
-            vector<assoInfo> temp = cTree.fpMining(newHistory);
-            result.insert(result.end(), temp.begin(), temp.end());
-        }
-        return result;
-    }
-
-    // create cond tree of item
-    fpTree condTree(treeNode *n)
-    {
-        fpTree tree(minSup);
-
-        vector<vector<string>> newTransations;
-
-        while (n)
-        {
-            int pCount = n->count;
-
-            vector<string> preNodes;
-
-            treeNode *p = n->parent;
-
-            while (p->parent)
-            {
-                preNodes.push_back(p->item);
-                p = p->parent;
-            }
-            while (pCount--)
-            {
-                newTransations.push_back(preNodes);
-            }
-            n = n->nextHomonym;
-        }
-        tree.countItems(newTransations);
-        tree.addNode(newTransations);
-        return tree;
-    }
-};
+#include "fpGrowth.hpp"
 
 // get all transations
 vector<vector<string>> readData(string filePath)
 {
-
     int id, tranID;
     string item;
 
@@ -263,7 +23,7 @@ vector<vector<string>> readData(string filePath)
     }
     return result;
 }
-
+// show tree structure
 void showTree(fpTree &tree)
 {
     queue<treeNode *> list;
@@ -295,26 +55,103 @@ void showTree(fpTree &tree)
     }
 }
 
+// given itemset { 1, 2, 3}
+// return all combination  of {} => {}
+vector<pair<string, string>> allCombination(const set<string> &freqItemSet)
+{
+    vector<pair<string, string>> result;
+
+    queue<pair<string, string>> que;
+
+    vector<string> itemSet(freqItemSet.begin(), freqItemSet.end());
+
+    que.push(make_pair("", ""));
+
+    int index = 0;
+
+    while (que.size() && index < itemSet.size())
+    {
+
+        int n = que.size();
+        while (n--)
+        {
+            auto temp1 = que.front();
+            auto temp2 = que.front();
+            que.pop();
+
+            temp1.first += itemSet[index] + ", ";
+            temp2.second += itemSet[index] + ", ";
+
+            que.push(temp1);
+            que.push(temp2);
+        }
+        index++;
+    }
+    while (que.size())
+    {
+        if (que.front().first != "" && que.front().second != "")
+            result.push_back(que.front());
+        que.pop();
+    }
+    return result;
+}
+
+// output result to file
+void printResult(map<string, int> itemFrequency, const vector<assoInfo> &freqSet, string outfile, float minSupport, float minConfidence, float transCount)
+{
+    ofstream myfile;
+    myfile.open(outfile);
+
+    int totalCounts = 0;
+
+    unordered_map<string, float> ruleCount;
+
+    // create itemset:freq map
+    for (auto const &fSet : freqSet)
+    {
+        string k = "";
+        for (auto const &item : fSet.itemSet)
+            k += item + ", ";
+
+        ruleCount[k] = fSet.support;
+    }
+
+    myfile << " Sup  | Conf  | Rule\n";
+    myfile << "====================\n";
+    // filte with confidence & print reuslt to file
+    for (auto const &itSet : freqSet)
+    {
+        auto allCombs = allCombination(itSet.itemSet);
+
+        for (auto const &comb : allCombs)
+        {
+
+            float sup = itSet.support / transCount;
+            float confi = itSet.support / ruleCount[comb.first];
+
+            if (confi < minConfidence)
+                continue;
+
+            myfile << setprecision(3) << setw(5) << sup << " | " << setw(5) << confi << " | ";
+            myfile << "{ " << comb.first << "} => { " << comb.second << "}\n";
+
+            totalCounts++;
+        }
+    }
+    myfile << "====================\nTotal rules = " << totalCounts << endl;
+    myfile.close();
+}
+
 int main()
 {
 
-    // create tree
-    fpTree tree(2);
+    float minSupport = 0.4, confidence = 0.2;
 
     // read data
-    //vector<vector<string>> datas = readData("./data.txt");
+    vector<vector<string>> datas = readData("./data.txt");
 
-    vector<vector<string>> datas = {
-        {"milk", "bread", "beer"},
-        {"bread", "coffee"},
-        {"bread", "egg"},
-        {"milk", "bread", "coffee"},
-        {"milk", "egg"},
-        {"bread", "egg"},
-        {"milk", "egg"},
-        {"milk", "bread", "egg", "beer"},
-        {"milk", "bread", "egg"},
-    };
+    // create tree
+    fpTree tree(int(datas.size() * minSupport));
 
     // count items
     tree.countItems(datas);
@@ -322,10 +159,8 @@ int main()
     // create tree
     tree.addNode(datas);
 
-    float confident = 0.5, support = 1;
+    auto ans = tree.fpMining();
 
-    // showTree(tree);
-
-    // fpTree t2 = tree.condTree("milk");
-    //   showTree(t2);
+    printResult(tree.frequency, ans, "./fp_result.txt", minSupport, confidence, datas.size());
+    int x = 0;
 }
