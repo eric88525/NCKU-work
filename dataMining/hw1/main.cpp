@@ -207,6 +207,8 @@ void printResult(const vector<assoInfo> &freqSet, string setPath, string rulePat
             float sup = float(itSet.support) / transCount;
             float confi = float(itSet.support) / ruleCount[comb.first];
 
+            if (confi > 1)
+                cout << "wrong\n";
             if (confi < minConfidence)
                 continue;
 

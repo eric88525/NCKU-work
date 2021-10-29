@@ -54,6 +54,11 @@ public:
         this->item = item;
         this->nextHomonym = NULL;
     }
+
+    ~treeNode()
+    {
+        cout << "free\n";
+    }
 };
 
 class fpTree
@@ -90,7 +95,7 @@ public:
     void addNode(const vector<vector<string>> &transations);
 
     // sort all item from high freq to low freq & remove unfreq item
-    vector<string> createOrder();
+    void createOrder();
 
     // build map of < item : frequency> and create order
     void buildTree(const vector<vector<string>> &datas);
@@ -99,7 +104,7 @@ public:
     vector<assoInfo> fpMining(assoInfo history);
 
     // create cond tree of item
-    fpTree condTree(treeNode *n);
+    fpTree condTree(string item);
 };
 
 // show tree structure
@@ -216,7 +221,7 @@ void fpTree::addNode(const vector<vector<string>> &transations)
 }
 
 // sort all item from high freq to low freq & remove unfreq item
-vector<string> fpTree::createOrder()
+void fpTree::createOrder()
 {
     vector<string> allItems;
 
@@ -230,7 +235,8 @@ vector<string> fpTree::createOrder()
 
     // from low freq to high freq
     reverse(allItems.begin(), allItems.end());
-    return allItems;
+
+    this->itemOrder = allItems;
 }
 
 // build map of < item : frequency> and create order
@@ -243,7 +249,10 @@ void fpTree::buildTree(const vector<vector<string>> &datas)
         for (auto const &item : transation)
             temp[item]++;
     }
-    for (auto const &i : temp)
+
+    this->frequency.clear();
+
+    for (auto i : temp)
     {
         if (i.second >= this->minSup)
         {
@@ -251,7 +260,7 @@ void fpTree::buildTree(const vector<vector<string>> &datas)
         }
     }
 
-    this->itemOrder = createOrder();
+    createOrder();
 
     for (int i = 0; i < this->itemOrder.size(); i++)
     {
@@ -279,8 +288,7 @@ vector<assoInfo> fpTree::fpMining(assoInfo history)
         result.push_back(newHistory);
 
         // create cond tree by item
-        treeNode *itp = itemPointers[item];
-        fpTree cTree = condTree(itp);
+        fpTree cTree = condTree(item);
 
         // recursive mining
         vector<assoInfo> temp = cTree.fpMining(newHistory);
@@ -292,9 +300,10 @@ vector<assoInfo> fpTree::fpMining(assoInfo history)
 }
 
 // create cond tree of item
-fpTree fpTree::condTree(treeNode *n)
+fpTree fpTree::condTree(string item)
 {
 
+    treeNode *n = itemPointers[item];
     fpTree tree(this->minSup);
 
     vector<vector<string>> newTransations;
@@ -312,10 +321,14 @@ fpTree fpTree::condTree(treeNode *n)
             preNodes.push_back(p->item);
             p = p->parent;
         }
-        while (pCount--)
+        if (preNodes.size())
         {
-            newTransations.push_back(preNodes);
+            while (pCount--)
+            {
+                newTransations.push_back(preNodes);
+            }
         }
+
         n = n->nextHomonym;
     }
 
