@@ -16,7 +16,7 @@ vector<assoInfo> apriori(const vector<vector<string>> &data, int minSup)
     map<string, int> itemSetHistory;
 
     // count base item &  save transations
-    for (const vector<string> &t : data)
+    for (vector<string> const &t : data)
     {
         set<string> temp;
         for (auto item : t)
@@ -27,29 +27,35 @@ vector<assoInfo> apriori(const vector<vector<string>> &data, int minSup)
         transations.push_back(temp);
     }
 
-    set<string> baseItems;
+    vector<string> baseItems;
     vector<assoInfo> freqItemSet;
 
     // add freq one item to baseItems
-    for (auto item : oneItemDict)
+    for (auto const &item : oneItemDict)
     {
         if (item.second >= minSup)
         {
-            cout << item.first << " has " << item.second << endl;
-            baseItems.insert(item.first);
-            freqItemSet.push_back(assoInfo(set<string>({item.first}), item.second));
-            result.push_back(assoInfo(set<string>({item.first}), item.second));
+            baseItems.push_back(item.first);
+            assoInfo temp(set<string>({item.first}), item.second);
+            freqItemSet.push_back(temp);
+            result.push_back(temp);
         }
     }
+    int now = 0;
     while (freqItemSet.size())
     {
+
         vector<assoInfo> currItemSet;
         // previous freq item set
-        for (assoInfo f : freqItemSet)
+
+        int prev = 1;
+        for (assoInfo const &f : freqItemSet)
         {
             // base item to add
-            for (string oItem : baseItems)
+
+            for (int i = prev++; i < baseItems.size(); i++)
             {
+                string oItem = baseItems[i];
                 // if already has base item
                 if (f.itemSet.count(oItem))
                     continue;
@@ -70,7 +76,7 @@ vector<assoInfo> apriori(const vector<vector<string>> &data, int minSup)
                     itemSetHistory[pattern] = 1;
 
                 // lookup support from transations
-                for (set<string> trans : transations)
+                for (set<string> const &trans : transations)
                 {
                     // get union of this freq itemset with transation
                     set<string> ts;
@@ -85,11 +91,13 @@ vector<assoInfo> apriori(const vector<vector<string>> &data, int minSup)
                 // delete if support < minup
                 if (tempAsso.support < minSup)
                     continue;
-                currItemSet.push_back(tempAsso);
-                result.push_back(tempAsso);
+                else
+                {
+                    currItemSet.push_back(tempAsso);
+                    result.push_back(tempAsso);
+                }
             }
         }
-        freqItemSet.clear();
         freqItemSet = currItemSet;
     }
 
@@ -219,8 +227,8 @@ int main()
     float minSupport = 0.1, confidence = 0.2;
 
     // read data
-    //vector<vector<string>> datas = readData("./data.txt");
-
+    vector<vector<string>> datas = readData("./data.txt");
+    /*
     vector<vector<string>> datas = {
         {"milk", "bread", "beer"},
         {"bread", "coffee"},
@@ -231,17 +239,24 @@ int main()
         {"milk", "egg"},
         {"milk", "bread", "egg", "beer"},
         {"milk", "bread", "egg"},
-    };
+    };*/
 
     // create tree
-    fpTree tree(int( minSupport * datas.size() );
+    //fpTree tree(int(minSupport * datas.size()));
+
+    //fpTree tree(2);
     // build tree
+
+    int mSup = int(minSupport * datas.size());
+
+    // mSup = 2;
+
+    fpTree tree(mSup);
     tree.buildTree(datas);
 
     vector<assoInfo> tree_ans = tree.fpMining();
+    vector<assoInfo> ap_ans = apriori(datas, mSup);
 
-    vector<assoInfo> ap_ans = apriori(datas, 2);
-
-    printResult( tree_ans, "./fp_result.txt", "fp_rule.txt", minSupport, confidence, datas.size());
+    printResult(tree_ans, "./fp_result.txt", "fp_rule.txt", minSupport, confidence, datas.size());
     printResult(ap_ans, "./ap_result.txt", "./ap_rule.txt", minSupport, confidence, datas.size());
 }

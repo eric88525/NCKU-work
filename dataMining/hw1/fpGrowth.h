@@ -144,7 +144,7 @@ void fpTree::sortByFreq(vector<string> &transation, int low, int high)
         sortByFreq(transation, pi + 1, high);
     }
 }
-
+// quick sort by freq (high to low)
 int fpTree::partition(vector<string> &arr, int low, int high)
 {
     int pivot = frequency[arr[high]];
