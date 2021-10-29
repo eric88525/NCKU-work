@@ -16,9 +16,9 @@ using namespace std;
 class assoInfo
 {
 public:
-    //string item;
+    // itemSet
     set<string> itemSet;
-
+    // support count
     int support;
 
     assoInfo() : itemSet({}), support(0) {}
@@ -237,6 +237,7 @@ void fpTree::buildTree(const vector<vector<string>> &datas)
 
     map<string, int> temp;
 
+    //count item support count
     for (const auto &transation : datas)
     {
         for (const auto &item : transation)
@@ -255,7 +256,6 @@ void fpTree::buildTree(const vector<vector<string>> &datas)
             this->frequency[i.first] = i.second;
         }
     }
-
     createOrder();
     addNode(datas);
 }
@@ -305,6 +305,7 @@ fpTree fpTree::condTree(string item)
     {
         int pCount = n->count;
 
+        // parent nodes
         vector<string> preNodes;
 
         treeNode *p = n->parent;
@@ -314,6 +315,7 @@ fpTree fpTree::condTree(string item)
             preNodes.push_back(p->item);
             p = p->parent;
         }
+
         if (preNodes.size())
         {
             while (pCount--)

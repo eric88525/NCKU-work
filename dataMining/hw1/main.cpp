@@ -125,8 +125,8 @@ vector<vector<string>> readData(string filePath)
     return result;
 }
 
-// given itemset { 1, 2, 3}
-// return all combination  of {} => {} ex. like {1}=>{2,3}
+// generate all  possible {a}=>{b} patterns and print support & confidence
+// given itemset { 1, 2, 3} , return all combination  of {} => {} ex. like {1}=>{2,3}
 vector<pair<string, string>> allCombination(const set<string> &freqItemSet)
 {
     vector<pair<string, string>> result;
@@ -166,13 +166,13 @@ vector<pair<string, string>> allCombination(const set<string> &freqItemSet)
     return result;
 }
 
-// output result to file
+// print result to file
 void printResult(const vector<assoInfo> &freqSet, string setPath, string rulePath, float minSupport, float minConfidence, float transCount)
 {
     ofstream myfile;
     myfile.open(setPath);
 
-    int totalCounts = 0;
+    int totalRules = 0;
 
     map<string, float> ruleCount;
 
@@ -213,10 +213,10 @@ void printResult(const vector<assoInfo> &freqSet, string setPath, string rulePat
             myfile << setprecision(4) << setw(5) << sup << " | " << setw(5) << confi << " | ";
             myfile << "{ " << comb.first << "} => { " << comb.second << "}\n";
 
-            totalCounts++;
+            totalRules++;
         }
     }
-    myfile << "====================\nTotal rules = " << totalCounts << endl;
+    myfile << "====================\nTotal rules = " << totalRules << endl;
     myfile.close();
 }
 
@@ -246,9 +246,11 @@ int main()
     fpTree tree(mSup);
     tree.buildTree(datas);
 
+    // find all freq itemSet
     vector<assoInfo> tree_ans = tree.fpMining(assoInfo());
     vector<assoInfo> ap_ans = apriori(datas, mSup);
 
+    // generate all  possible {a}=>{b} patterns and print support & confidence
     printResult(tree_ans, "./fp_result.txt", "./fp_rule.txt", minSupport, confidence, datas.size());
     printResult(ap_ans, "./ap_result.txt", "./ap_rule.txt", minSupport, confidence, datas.size());
 }
