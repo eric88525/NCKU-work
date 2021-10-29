@@ -1,5 +1,101 @@
 #include "fpGrowth.h"
 
+// apriori
+vector<assoInfo> apriori(const vector<vector<string>> &data, int minSup)
+{
+    // return result
+    vector<assoInfo> result;
+
+    // lookup table of transations
+    vector<set<string>> transations;
+
+    // count base item
+    map<string, int> oneItemDict;
+
+    // save seen freq itemset
+    map<string, int> itemSetHistory;
+
+    // count base item &  save transations
+    for (const vector<string> &t : data)
+    {
+        set<string> temp;
+        for (auto item : t)
+        {
+            oneItemDict[item]++;
+            temp.insert(item);
+        }
+        transations.push_back(temp);
+    }
+
+    set<string> baseItems;
+    vector<assoInfo> freqItemSet;
+
+    // add freq one item to baseItems
+    for (auto item : oneItemDict)
+    {
+        if (item.second >= minSup)
+        {
+            cout << item.first << " has " << item.second << endl;
+            baseItems.insert(item.first);
+            freqItemSet.push_back(assoInfo(set<string>({item.first}), item.second));
+            result.push_back(assoInfo(set<string>({item.first}), item.second));
+        }
+    }
+    while (freqItemSet.size())
+    {
+        vector<assoInfo> currItemSet;
+        // previous freq item set
+        for (assoInfo f : freqItemSet)
+        {
+            // base item to add
+            for (string oItem : baseItems)
+            {
+                // if already has base item
+                if (f.itemSet.count(oItem))
+                    continue;
+
+                // add base item
+                assoInfo tempAsso = f;
+                tempAsso.support = 0;
+                tempAsso.itemSet.insert(oItem);
+
+                // check if this pattern exist
+                string pattern = "";
+                for (auto i : tempAsso.itemSet)
+                    pattern += i + ", ";
+
+                if (itemSetHistory.count(pattern))
+                    continue;
+                else
+                    itemSetHistory[pattern] = 1;
+
+                // lookup support from transations
+                for (set<string> trans : transations)
+                {
+                    // get union of this freq itemset with transation
+                    set<string> ts;
+                    // if intersection count == this pattern means it show in transation
+                    set_intersection(tempAsso.itemSet.begin(), tempAsso.itemSet.end(), trans.begin(), trans.end(), inserter(ts, ts.begin()));
+
+                    if (ts.size() == tempAsso.itemSet.size())
+                    {
+                        tempAsso.support++;
+                    }
+                }
+                // delete if support < minup
+                if (tempAsso.support < minSup)
+                    continue;
+                currItemSet.push_back(tempAsso);
+                result.push_back(tempAsso);
+            }
+        }
+        freqItemSet.clear();
+        freqItemSet = currItemSet;
+    }
+
+    return result;
+}
+
 // get all transations
 vector<vector<string>> readData(string filePath)
 {
@@ -66,17 +162,17 @@ vector<pair<string, string>> allCombination(const set<string> &freqItemSet)
 }
 
 // output result to file
-void printResult(map<string, int> itemFrequency, const vector<assoInfo> &freqSet, string outfile, float minSupport, float minConfidence, float transCount)
+void printResult(const vector<assoInfo> &freqSet, string setPath, string rulePath, float minSupport, float minConfidence, float transCount)
 {
     ofstream myfile;
-    myfile.open(outfile);
+    myfile.open(setPath);
 
     int totalCounts = 0;
 
     map<string, float> ruleCount;
 
     ofstream rulefile;
-    rulefile.open("./rule.txt");
+    rulefile.open(rulePath);
 
     // create itemset:freq map
     for (auto const &fSet : freqSet)
@@ -123,9 +219,9 @@ int main()
     float minSupport = 0.1, confidence = 0.2;
 
     // read data
-    vector<vector<string>> datas = readData("./data.txt");
+    //vector<vector<string>> datas = readData("./data.txt");
 
-    /*  vector<vector<string>> datas = {
+    vector<vector<string>> datas = {
         {"milk", "bread", "beer"},
         {"bread", "coffee"},
         {"bread", "egg"},
@@ -135,15 +231,17 @@ int main()
         {"milk", "egg"},
         {"milk", "bread", "egg", "beer"},
         {"milk", "bread", "egg"},
-    };*/
+    };
+
     // create tree
-    //fpTree tree(minSupport * datas.size());
-    fpTree tree(int(datas.size() * minSupport));
+    fpTree tree(int( minSupport * datas.size() );
     // build tree
     tree.buildTree(datas);
 
-    auto tree_ans = tree.fpMining();
+    vector<assoInfo> tree_ans = tree.fpMining();
 
-    printResult(tree.frequency, tree_ans, "./fp_result.txt", minSupport, confidence, datas.size());
-    int x = 0;
+    vector<assoInfo> ap_ans = apriori(datas, 2);
+
+    printResult( tree_ans, "./fp_result.txt", "fp_rule.txt", minSupport, confidence, datas.size());
+    printResult(ap_ans, "./ap_result.txt", "./ap_rule.txt", minSupport, confidence, datas.size());
 }

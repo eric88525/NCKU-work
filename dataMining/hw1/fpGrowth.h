@@ -22,6 +22,7 @@ public:
     int support;
 
     assoInfo() : itemSet({}), support(0) {}
+    assoInfo(set<string> itemSet, int support) : itemSet(itemSet), support(support) {}
     assoInfo(const assoInfo &p1)
     {
         //  this->item = p1.item;
@@ -83,7 +84,7 @@ public:
     int partition(vector<string> &arr, int low, int high);
 
     // remove item if it's support < minSupport
-    vector<string> removeUnFreq(const vector<string> &transation);
+    void removeUnFreq(vector<string> &transation);
 
     // add tree node
     void addNode(const vector<vector<string>> &transations);
@@ -162,7 +163,7 @@ int fpTree::partition(vector<string> &arr, int low, int high)
 }
 
 // remove item if it's support < minSupport
-vector<string> fpTree::removeUnFreq(const vector<string> &transation)
+void fpTree::removeUnFreq(vector<string> &transation)
 {
     vector<string> result;
     for (auto t : transation)
@@ -170,7 +171,7 @@ vector<string> fpTree::removeUnFreq(const vector<string> &transation)
         if (this->frequency.count(t) && this->frequency[t] >= minSup)
             result.push_back(t);
     }
-    return result;
+    transation = result;
 }
 
 // add tree node
@@ -181,7 +182,7 @@ void fpTree::addNode(const vector<vector<string>> &transations)
         treeNode *p = root;
         treeNode *parent = p;
 
-        transation = removeUnFreq(transation);
+        removeUnFreq(transation);
 
         sortByFreq(transation, 0, transation.size() - 1);
 
@@ -269,8 +270,8 @@ vector<assoInfo> fpTree::fpMining(assoInfo history = assoInfo())
         result.push_back(newHistory);
 
         // create cond tree by item
-        treeNode *n = itemPointers[item];
-        fpTree cTree = condTree(n);
+        treeNode *itp = itemPointers[item];
+        fpTree cTree = condTree(itp);
 
         // recursive mining
         vector<assoInfo> temp = cTree.fpMining(newHistory);
@@ -285,7 +286,7 @@ vector<assoInfo> fpTree::fpMining(assoInfo history = assoInfo())
 fpTree fpTree::condTree(treeNode *n)
 {
 
-    fpTree tree(minSup);
+    fpTree tree(this->minSup);
 
     vector<vector<string>> newTransations;
 
