@@ -41,7 +41,6 @@ vector<assoInfo> apriori(const vector<vector<string>> &data, int minSup)
             result.push_back(temp);
         }
     }
-    int now = 0;
     while (freqItemSet.size())
     {
 
@@ -53,7 +52,7 @@ vector<assoInfo> apriori(const vector<vector<string>> &data, int minSup)
         {
             // base item to add
 
-            for (int i = prev++; i < baseItems.size(); i++)
+            for (int i = 0; i < baseItems.size(); i++)
             {
                 string oItem = baseItems[i];
                 // if already has base item
@@ -254,7 +253,7 @@ int main()
     fpTree tree(mSup);
     tree.buildTree(datas);
 
-    vector<assoInfo> tree_ans = tree.fpMining();
+    vector<assoInfo> tree_ans = tree.fpMining(assoInfo());
     vector<assoInfo> ap_ans = apriori(datas, mSup);
 
     printResult(tree_ans, "./fp_result.txt", "fp_rule.txt", minSupport, confidence, datas.size());

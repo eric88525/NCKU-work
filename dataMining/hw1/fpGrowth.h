@@ -90,7 +90,7 @@ public:
     void addNode(const vector<vector<string>> &transations);
 
     // sort all item from high freq to low freq & remove unfreq item
-    void createOrder();
+    vector<string> createOrder();
 
     // build map of < item : frequency> and create order
     void buildTree(const vector<vector<string>> &datas);
@@ -216,7 +216,7 @@ void fpTree::addNode(const vector<vector<string>> &transations)
 }
 
 // sort all item from high freq to low freq & remove unfreq item
-void fpTree::createOrder()
+vector<string> fpTree::createOrder()
 {
     vector<string> allItems;
 
@@ -230,12 +230,13 @@ void fpTree::createOrder()
 
     // from low freq to high freq
     reverse(allItems.begin(), allItems.end());
-    this->itemOrder = allItems;
+    return allItems;
 }
 
 // build map of < item : frequency> and create order
 void fpTree::buildTree(const vector<vector<string>> &datas)
 {
+
     map<string, int> temp;
     for (auto const &transation : datas)
     {
@@ -249,12 +250,20 @@ void fpTree::buildTree(const vector<vector<string>> &datas)
             this->frequency[i.first] = i.second;
         }
     }
-    createOrder();
+
+    this->itemOrder = createOrder();
+
+    for (int i = 0; i < this->itemOrder.size(); i++)
+    {
+        cout << itemOrder[i] << "[" << frequency[itemOrder[i]] << "]"
+             << " ";
+    }
+    cout << "\n===============\n";
     addNode(datas);
 }
 
 // find freq itemset
-vector<assoInfo> fpTree::fpMining(assoInfo history = assoInfo())
+vector<assoInfo> fpTree::fpMining(assoInfo history)
 {
 
     vector<assoInfo> result;
@@ -309,6 +318,10 @@ fpTree fpTree::condTree(treeNode *n)
         }
         n = n->nextHomonym;
     }
+
+    if (newTransations.size() == 0)
+        return tree;
+
     tree.buildTree(newTransations);
     return tree;
 }
