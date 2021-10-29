@@ -249,7 +249,7 @@ int main()
     // build tree
 
     int mSup = int(minSupport * datas.size());
-
+    cout << "min sup = " << mSup << endl;
     // mSup = 2;
 
     fpTree tree(mSup);
@@ -258,6 +258,6 @@ int main()
     vector<assoInfo> tree_ans = tree.fpMining(assoInfo());
     vector<assoInfo> ap_ans = apriori(datas, mSup);
 
-    printResult(tree_ans, "./fp_result.txt", "fp_rule.txt", minSupport, confidence, datas.size());
+    printResult(tree_ans, "./fp_result.txt", "./fp_rule.txt", minSupport, confidence, datas.size());
     printResult(ap_ans, "./ap_result.txt", "./ap_rule.txt", minSupport, confidence, datas.size());
 }

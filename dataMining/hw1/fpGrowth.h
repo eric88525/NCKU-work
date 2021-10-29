@@ -25,7 +25,6 @@ public:
     assoInfo(set<string> itemSet, int support) : itemSet(itemSet), support(support) {}
     assoInfo(const assoInfo &p1)
     {
-        //  this->item = p1.item;
         this->itemSet = p1.itemSet;
         this->support = p1.support;
     }
@@ -54,11 +53,6 @@ public:
         this->item = item;
         this->nextHomonym = NULL;
     }
-
-    ~treeNode()
-    {
-        cout << "free\n";
-    }
 };
 
 class fpTree
@@ -72,12 +66,13 @@ public:
     // pointer of last seen treeNode of item
     map<string, treeNode *> itemPointers;
 
-    // list all item by freq low to hight
+    // list all item by freq high to low
     vector<string> itemOrder;
 
     // init
-    fpTree(int minSup) : minSup(minSup)
+    fpTree(int minSup)
     {
+        this->minSup = minSup;
         this->frequency = {};
         this->itemPointers = {};
         this->itemOrder = {};
@@ -139,7 +134,7 @@ void showTree(fpTree &tree)
     }
 }
 
-// quick sort by freq (high to low)
+// quick sort by freq  (high to low)
 void fpTree::sortByFreq(vector<string> &transation, int low, int high)
 {
     if (low < high)
@@ -149,7 +144,7 @@ void fpTree::sortByFreq(vector<string> &transation, int low, int high)
         sortByFreq(transation, pi + 1, high);
     }
 }
-// quick sort by freq (high to low)
+// quick sort by freq  (high to low)
 int fpTree::partition(vector<string> &arr, int low, int high)
 {
     int pivot = frequency[arr[high]];
@@ -157,7 +152,7 @@ int fpTree::partition(vector<string> &arr, int low, int high)
 
     for (int j = low; j < high; j++)
     {
-        if (frequency[arr[j]] > pivot)
+        if (this->frequency[arr[j]] > pivot || (this->frequency[arr[j]] == pivot && arr[j].compare(arr[high]) == 1))
         {
             i++;
             swap(arr[i], arr[j]);
@@ -233,9 +228,6 @@ void fpTree::createOrder()
 
     sortByFreq(allItems, 0, allItems.size() - 1);
 
-    // from low freq to high freq
-    reverse(allItems.begin(), allItems.end());
-
     this->itemOrder = allItems;
 }
 
@@ -244,10 +236,13 @@ void fpTree::buildTree(const vector<vector<string>> &datas)
 {
 
     map<string, int> temp;
+
     for (auto const &transation : datas)
     {
         for (auto const &item : transation)
+        {
             temp[item]++;
+        }
     }
 
     this->frequency.clear();
@@ -262,12 +257,16 @@ void fpTree::buildTree(const vector<vector<string>> &datas)
 
     createOrder();
 
-    for (int i = 0; i < this->itemOrder.size(); i++)
+    if (this->itemOrder.size())
     {
-        cout << itemOrder[i] << "[" << frequency[itemOrder[i]] << "]"
-             << " ";
+        for (int i = 0; i < this->itemOrder.size(); i++)
+        {
+            cout << itemOrder[i] << "[" << frequency[itemOrder[i]] << "]"
+                 << " ";
+        }
+        cout << "\n===============\n";
     }
-    cout << "\n===============\n";
+
     addNode(datas);
 }
 
@@ -276,15 +275,24 @@ vector<assoInfo> fpTree::fpMining(assoInfo history)
 {
 
     vector<assoInfo> result;
+    // item order is from high to low , so reverse it
+    reverse(this->itemOrder.begin(), this->itemOrder.end());
 
-    for (auto item : itemOrder)
+    for (auto item : this->itemOrder)
     {
         // make a copy of history
         assoInfo newHistory = history;
 
         // add current item
         newHistory.itemSet.insert(item);
+
+        if (item == "487")
+        {
+            cout << this->frequency[item] << "\n";
+        }
+
         newHistory.support = this->frequency[item];
+
         result.push_back(newHistory);
 
         // create cond tree by item
@@ -316,7 +324,7 @@ fpTree fpTree::condTree(string item)
 
         treeNode *p = n->parent;
 
-        while (p->parent)
+        while (p->item != "root")
         {
             preNodes.push_back(p->item);
             p = p->parent;
@@ -332,9 +340,7 @@ fpTree fpTree::condTree(string item)
         n = n->nextHomonym;
     }
 
-    if (newTransations.size() == 0)
-        return tree;
-
     tree.buildTree(newTransations);
+
     return tree;
 }
