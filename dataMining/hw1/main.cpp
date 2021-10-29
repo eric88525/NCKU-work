@@ -19,19 +19,19 @@ vector<assoInfo> apriori(const vector<vector<string>> &data, int minSup)
     for (vector<string> const &t : data)
     {
         set<string> temp;
-        for (auto item : t)
+        for (const auto &item : t)
         {
             oneItemDict[item]++;
             temp.insert(item);
         }
         transations.push_back(temp);
     }
-
+    // one item to add
     vector<string> baseItems;
     vector<assoInfo> freqItemSet;
 
     // add freq one item to baseItems
-    for (auto const &item : oneItemDict)
+    for (const auto &item : oneItemDict)
     {
         if (item.second >= minSup)
         {
@@ -43,11 +43,9 @@ vector<assoInfo> apriori(const vector<vector<string>> &data, int minSup)
     }
     while (freqItemSet.size())
     {
-
+        // next step freq item set
         vector<assoInfo> currItemSet;
-        // previous freq item set
 
-        int prev = 1;
         for (assoInfo const &f : freqItemSet)
         {
             // base item to add
@@ -182,10 +180,10 @@ void printResult(const vector<assoInfo> &freqSet, string setPath, string rulePat
     rulefile.open(rulePath);
 
     // create itemset:freq map
-    for (auto const &fSet : freqSet)
+    for (const auto &fSet : freqSet)
     {
         string k = "";
-        for (auto const &item : fSet.itemSet)
+        for (const auto &item : fSet.itemSet)
             k += item + ", ";
 
         ruleCount[k] = fSet.support;
@@ -197,11 +195,11 @@ void printResult(const vector<assoInfo> &freqSet, string setPath, string rulePat
     myfile << "====================\n";
 
     //  confidence filter & print reuslt to file
-    for (auto const &itSet : freqSet)
+    for (const auto &itSet : freqSet)
     {
         auto allCombs = allCombination(itSet.itemSet);
 
-        for (auto const &comb : allCombs)
+        for (const auto &comb : allCombs)
         {
 
             float sup = float(itSet.support) / transCount;
@@ -229,7 +227,8 @@ int main()
 
     // read data
     vector<vector<string>> datas = readData("./data.txt");
-    /*
+
+    /* some toy
     vector<vector<string>> datas = {
         {"milk", "bread", "beer"},
         {"bread", "coffee"},
@@ -242,15 +241,7 @@ int main()
         {"milk", "bread", "egg"},
     };*/
 
-    // create tree
-    //fpTree tree(int(minSupport * datas.size()));
-
-    //fpTree tree(2);
-    // build tree
-
     int mSup = int(minSupport * datas.size());
-    cout << "min sup = " << mSup << endl;
-    // mSup = 2;
 
     fpTree tree(mSup);
     tree.buildTree(datas);

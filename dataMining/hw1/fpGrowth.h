@@ -61,12 +61,13 @@ public:
     treeNode *root;
     int minSup;
 
+    // the item frequency
     map<string, int> frequency;
 
-    // pointer of last seen treeNode of item
+    // item node pointer
     map<string, treeNode *> itemPointers;
 
-    // list all item by freq high to low
+    // all item (freq high to low)
     vector<string> itemOrder;
 
     // init
@@ -79,7 +80,7 @@ public:
         this->root = new treeNode();
     }
 
-    // quick sort by freq (high to low)
+    // quick sort by freq (high to low , string cmp high to low if freq[a]==freq[b])
     void sortByFreq(vector<string> &transation, int low, int high);
     int partition(vector<string> &arr, int low, int high);
 
@@ -89,13 +90,13 @@ public:
     // add tree node
     void addNode(const vector<vector<string>> &transations);
 
-    // sort all item from high freq to low freq & remove unfreq item
+    // list all item from high freq to low freq & remove unfreq item
     void createOrder();
 
-    // build map of < item : frequency> and create order
+    // build map of  {item : frequency} and create order
     void buildTree(const vector<vector<string>> &datas);
 
-    // find freq itemset
+    // return all freq itemset
     vector<assoInfo> fpMining(assoInfo history);
 
     // create cond tree of item
@@ -112,9 +113,7 @@ void showTree(fpTree &tree)
     cout << "[root]";
     while (list.size())
     {
-
         int n = list.size();
-
         cout << "\n=====================\n";
         while (n--)
         {
@@ -134,7 +133,7 @@ void showTree(fpTree &tree)
     }
 }
 
-// quick sort by freq  (high to low)
+// quick sort by freq (high to low , string cmp high to low if freq[a]==freq[b])
 void fpTree::sortByFreq(vector<string> &transation, int low, int high)
 {
     if (low < high)
@@ -144,7 +143,8 @@ void fpTree::sortByFreq(vector<string> &transation, int low, int high)
         sortByFreq(transation, pi + 1, high);
     }
 }
-// quick sort by freq  (high to low)
+
+// quick sort by freq (high to low , string cmp high to low if freq[a]==freq[b])
 int fpTree::partition(vector<string> &arr, int low, int high)
 {
     int pivot = frequency[arr[high]];
@@ -215,12 +215,12 @@ void fpTree::addNode(const vector<vector<string>> &transations)
     }
 }
 
-// sort all item from high freq to low freq & remove unfreq item
+// list all item from high freq to low freq & remove unfreq item
 void fpTree::createOrder()
 {
     vector<string> allItems;
 
-    for (auto const &i : this->frequency)
+    for (const auto &i : this->frequency)
     {
         string temp = i.first;
         allItems.push_back(temp);
@@ -231,15 +231,15 @@ void fpTree::createOrder()
     this->itemOrder = allItems;
 }
 
-// build map of < item : frequency> and create order
+// build map of  {item : frequency} and create order
 void fpTree::buildTree(const vector<vector<string>> &datas)
 {
 
     map<string, int> temp;
 
-    for (auto const &transation : datas)
+    for (const auto &transation : datas)
     {
-        for (auto const &item : transation)
+        for (const auto &item : transation)
         {
             temp[item]++;
         }
@@ -247,6 +247,7 @@ void fpTree::buildTree(const vector<vector<string>> &datas)
 
     this->frequency.clear();
 
+    // add freq one item to frequency
     for (auto i : temp)
     {
         if (i.second >= this->minSup)
@@ -256,17 +257,6 @@ void fpTree::buildTree(const vector<vector<string>> &datas)
     }
 
     createOrder();
-
-    if (this->itemOrder.size())
-    {
-        for (int i = 0; i < this->itemOrder.size(); i++)
-        {
-            cout << itemOrder[i] << "[" << frequency[itemOrder[i]] << "]"
-                 << " ";
-        }
-        cout << "\n===============\n";
-    }
-
     addNode(datas);
 }
 
@@ -278,18 +268,13 @@ vector<assoInfo> fpTree::fpMining(assoInfo history)
     // item order is from high to low , so reverse it
     reverse(this->itemOrder.begin(), this->itemOrder.end());
 
-    for (auto item : this->itemOrder)
+    for (auto const item : this->itemOrder)
     {
         // make a copy of history
         assoInfo newHistory = history;
 
         // add current item
         newHistory.itemSet.insert(item);
-
-        if (item == "487")
-        {
-            cout << this->frequency[item] << "\n";
-        }
 
         newHistory.support = this->frequency[item];
 
