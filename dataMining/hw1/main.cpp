@@ -59,6 +59,7 @@ void printResult(const vector<assoInfo> &freqSet, string setPath, string rulePat
     ofstream rulefile;
     rulefile.open(rulePath);
 
+    cout << "[freqSet] = " << freqSet.size() << "\n";
     // create itemset:freq map
     rulefile << "count | itemSet\n";
     for (const auto &fSet : freqSet)
@@ -100,6 +101,7 @@ void printResult(const vector<assoInfo> &freqSet, string setPath, string rulePat
     }
     myfile << "====================\nTotal rules = " << totalRules << endl;
     myfile.close();
+    cout << "[rules] = " << totalRules << "\n";
 }
 
 void test(string mode, const vector<vector<string>> &datas, float minSupport = 0.1, float confidence = 0.2)
@@ -107,9 +109,9 @@ void test(string mode, const vector<vector<string>> &datas, float minSupport = 0
     int mSup = int(minSupport * datas.size());
     vector<assoInfo> freqItemSet;
 
-    cout << "starting test / mode = " << mode << "\n";
-    cout << "data count:" << datas.size() << "\n";
-    cout << "minSup: " << mSup << "\n";
+    cout << "[mode] = " << mode << "\n";
+    cout << "[transations] = " << datas.size() << "\n";
+    cout << "[minSup] = " << mSup << "\n";
 
     // count time
     auto start = chrono::steady_clock::now();
@@ -132,7 +134,7 @@ void test(string mode, const vector<vector<string>> &datas, float minSupport = 0
 
     auto end = chrono::steady_clock::now();
     auto diff = end - start;
-    cout << chrono::duration<double, milli>(diff).count() << " ms" << endl;
+    cout << "[run time] = " << chrono::duration<double, milli>(diff).count() << " ms" << endl;
 
     if (mode == "fp")
     {
@@ -142,18 +144,27 @@ void test(string mode, const vector<vector<string>> &datas, float minSupport = 0
     {
         printResult(freqItemSet, "./ap_result.txt", "./ap_rule.txt", minSupport, confidence, datas.size());
     }
+    cout << "=====================\n";
 }
 
 int main()
 {
 
-    auto ibmData = readIBMData("./dataset/IBM5000.txt");
+    // test (mode,datas,minSupport,confidence)
+    // mode: ( fp or ap )
+    // data: transation data
+    // support: min support
+    // confidence: min confidence
 
-    // parameters: mode ( fp or ap ) , data , support , confidence
-    test("fp", ibmData, 0.1, 0.2);
-    test("ap", ibmData, 0.1, 0.2);
+    // test on ibm data
+    auto ibmData = readIBMData("./dataset/IBM2021.txt");
+    test("fp", ibmData, 0.01, 0.001);
+    test("ap", ibmData, 0.01, 0.001);
 
-    /* auto kaggleData = readKaggleData("./dataset/kaggle.txt");
-    test("fp", kaggleData, 0.006, 0.05);
-    test("ap", kaggleData, 0.006, 0.05);*/
+    // test on kaggle data
+    /*
+    auto kaggleData = readKaggleData("./dataset/Groceries_dataset.txt");
+    test("fp", kaggleData, 0.01, 0.001);
+    test("ap", kaggleData, 0.01, 0.001);
+    */
 }

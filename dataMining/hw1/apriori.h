@@ -7,18 +7,22 @@ vector<assoInfo> apriori(const vector<vector<string>> &data, int minSup)
     vector<assoInfo> result;
 
     // lookup table of transations
-    vector<set<string>> transations;
-
+    vector<map<string, int>> transations;
     // count base item
     map<string, int> oneItemDict;
 
     // count base item &  save transations for lookup
     for (const vector<string> &t : data)
     {
+        map<string, int> tmap;
         for (const auto &item : t)
+        {
             oneItemDict[item]++;
+            tmap[item]++;
+        }
 
-        transations.push_back(set<string>(t.begin(), t.end()));
+        transations.push_back(tmap);
+        // transations.push_back(set<string>(t.begin(), t.end()));
     }
 
     // one item to add
@@ -67,18 +71,21 @@ vector<assoInfo> apriori(const vector<vector<string>> &data, int minSup)
                 tempAsso.support = 0;
                 tempAsso.itemSet.insert(baseItems[i]);
 
-                for (const set<string> &trans : transations)
+                for (const auto &trans : transations)
                 {
-                    // get union of this freq itemset with transation
-                    set<string> ts;
-                    // if intersection count == this pattern means it show in transation
-                    set_intersection(tempAsso.itemSet.begin(), tempAsso.itemSet.end(), trans.begin(), trans.end(), inserter(ts, ts.begin()));
-
-                    if (ts.size() == tempAsso.itemSet.size())
+                    bool ok = true;
+                    for (const auto &s : tempAsso.itemSet)
                     {
-                        tempAsso.support++;
+                        if (!trans.count(s))
+                        {
+                            ok = false;
+                            break;
+                        }
                     }
+                    if (ok)
+                        tempAsso.support++;
                 }
+
                 if (tempAsso.support < minSup)
                     continue;
                 result.push_back(tempAsso);
