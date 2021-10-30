@@ -12,69 +12,62 @@ vector<assoInfo> apriori(const vector<vector<string>> &data, int minSup)
     // count base item
     map<string, int> oneItemDict;
 
-    // save seen freq itemset
-    map<string, int> itemSetHistory;
-
-    // count base item &  save transations
-    for (vector<string> const &t : data)
+    // count base item &  save transations for lookup
+    for (const vector<string> &t : data)
     {
-        set<string> temp;
         for (const auto &item : t)
-        {
             oneItemDict[item]++;
-            temp.insert(item);
-        }
-        transations.push_back(temp);
-    }
-    // one item to add
-    vector<string> baseItems;
-    vector<assoInfo> freqItemSet;
 
+        transations.push_back(set<string>(t.begin(), t.end()));
+    }
+
+    // one item to add
+    set<string> tempBaseItem;
     // add freq one item to baseItems
     for (const auto &item : oneItemDict)
     {
+        // one item > minsup
         if (item.second >= minSup)
         {
-            baseItems.push_back(item.first);
-            assoInfo temp(set<string>({item.first}), item.second);
-            freqItemSet.push_back(temp);
-            result.push_back(temp);
+            tempBaseItem.insert(item.first);
         }
     }
+
+    vector<string> baseItems;
+    map<string, int> lastIndex;
+    int lastidx = 0;
+    for (const auto &s : tempBaseItem)
+    {
+        baseItems.push_back(s);
+        lastIndex[s] = lastidx++;
+    }
+
+    // generate rule
+    queue<assoInfo> freqItemSet;
+
+    for (string item : baseItems)
+    {
+        assoInfo asso(set<string>({item}), oneItemDict[item]);
+        freqItemSet.push(asso);
+        result.push_back(asso);
+    }
+
     while (freqItemSet.size())
     {
-        // next step freq item set
-        vector<assoInfo> currItemSet;
-
-        for (assoInfo const &f : freqItemSet)
+        int n = freqItemSet.size();
+        while (n--)
         {
-            // base item to add
-            for (int i = 0; i < baseItems.size(); i++)
+            auto it = freqItemSet.front().itemSet.end();
+            it--;
+            int startIdx = lastIndex[*it] + 1;
+
+            for (int i = startIdx; i < baseItems.size(); i++)
             {
-                string oItem = baseItems[i];
+                assoInfo tempAsso = freqItemSet.front();
+                tempAsso.support = 0;
+                tempAsso.itemSet.insert(baseItems[i]);
 
-                // if already has base item
-                if (f.itemSet.count(oItem))
-                    continue;
-
-                // add base item
-                set<string> tempSet = f.itemSet;
-                tempSet.insert(oItem);
-
-                // check if this pattern exist
-                string pattern = "";
-                for (auto const &i : tempSet)
-                    pattern += i + ", ";
-
-                if (itemSetHistory.count(pattern))
-                    continue;
-                else
-                    itemSetHistory[pattern] = 1;
-
-                assoInfo tempAsso(tempSet, 0);
-
-                // lookup support from transations
-                for (set<string> const &trans : transations)
+                for (const set<string> &trans : transations)
                 {
                     // get union of this freq itemset with transation
                     set<string> ts;
@@ -86,18 +79,13 @@ vector<assoInfo> apriori(const vector<vector<string>> &data, int minSup)
                         tempAsso.support++;
                     }
                 }
-                // delete if support < minup
                 if (tempAsso.support < minSup)
                     continue;
-                else
-                {
-                    currItemSet.push_back(tempAsso);
-                    result.push_back(tempAsso);
-                }
+                result.push_back(tempAsso);
+                freqItemSet.push(tempAsso);
             }
+            freqItemSet.pop();
         }
-        freqItemSet = currItemSet;
     }
-
     return result;
 }

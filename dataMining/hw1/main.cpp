@@ -111,7 +111,9 @@ void test(string mode, const vector<vector<string>> &datas, float minSupport = 0
     cout << "data count:" << datas.size() << "\n";
     cout << "minSup: " << mSup << "\n";
 
+    // count time
     auto start = chrono::steady_clock::now();
+
     if (mode == "fp")
     {
         fpTree tree(mSup);
@@ -122,10 +124,13 @@ void test(string mode, const vector<vector<string>> &datas, float minSupport = 0
     {
         freqItemSet = apriori(datas, mSup);
     }
+    else
+    {
+        cout << "mode error\n";
+        return;
+    }
 
     auto end = chrono::steady_clock::now();
-
-    // Store the time difference between start and end
     auto diff = end - start;
     cout << chrono::duration<double, milli>(diff).count() << " ms" << endl;
 
@@ -133,7 +138,7 @@ void test(string mode, const vector<vector<string>> &datas, float minSupport = 0
     {
         printResult(freqItemSet, "./fp_result.txt", "./fp_rule.txt", minSupport, confidence, datas.size());
     }
-    else
+    else if (mode == "ap")
     {
         printResult(freqItemSet, "./ap_result.txt", "./ap_rule.txt", minSupport, confidence, datas.size());
     }
@@ -142,13 +147,13 @@ void test(string mode, const vector<vector<string>> &datas, float minSupport = 0
 int main()
 {
 
-    //
-
     auto ibmData = readIBMData("./dataset/IBM5000.txt");
+
+    // parameters: mode ( fp or ap ) , data , support , confidence
     test("fp", ibmData, 0.1, 0.2);
     test("ap", ibmData, 0.1, 0.2);
 
-    auto kaggleData = readKaggleData("./dataset/kaggle.txt");
-    test("fp", ibmData, 0.006, 0.05);
-    test("ap", ibmData, 0.006, 0.05);
+    /* auto kaggleData = readKaggleData("./dataset/kaggle.txt");
+    test("fp", kaggleData, 0.006, 0.05);
+    test("ap", kaggleData, 0.006, 0.05);*/
 }

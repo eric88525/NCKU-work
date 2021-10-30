@@ -10,6 +10,7 @@
 #include <iomanip>
 #include <unordered_map>
 #include <chrono>
+#include <stack>
 
 using namespace std;
 
