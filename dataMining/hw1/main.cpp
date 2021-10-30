@@ -1,115 +1,14 @@
 #include "fpGrowth.h"
-
-// apriori
-vector<assoInfo> apriori(const vector<vector<string>> &data, int minSup)
-{
-    // return result
-    vector<assoInfo> result;
-
-    // lookup table of transations
-    vector<set<string>> transations;
-
-    // count base item
-    map<string, int> oneItemDict;
-
-    // save seen freq itemset
-    map<string, int> itemSetHistory;
-
-    // count base item &  save transations
-    for (vector<string> const &t : data)
-    {
-        set<string> temp;
-        for (const auto &item : t)
-        {
-            oneItemDict[item]++;
-            temp.insert(item);
-        }
-        transations.push_back(temp);
-    }
-    // one item to add
-    vector<string> baseItems;
-    vector<assoInfo> freqItemSet;
-
-    // add freq one item to baseItems
-    for (const auto &item : oneItemDict)
-    {
-        if (item.second >= minSup)
-        {
-            baseItems.push_back(item.first);
-            assoInfo temp(set<string>({item.first}), item.second);
-            freqItemSet.push_back(temp);
-            result.push_back(temp);
-        }
-    }
-    while (freqItemSet.size())
-    {
-        // next step freq item set
-        vector<assoInfo> currItemSet;
-
-        for (assoInfo const &f : freqItemSet)
-        {
-            // base item to add
-
-            for (int i = 0; i < baseItems.size(); i++)
-            {
-                string oItem = baseItems[i];
-                // if already has base item
-                if (f.itemSet.count(oItem))
-                    continue;
-
-                // add base item
-                assoInfo tempAsso = f;
-                tempAsso.support = 0;
-                tempAsso.itemSet.insert(oItem);
-
-                // check if this pattern exist
-                string pattern = "";
-                for (auto i : tempAsso.itemSet)
-                    pattern += i + ", ";
-
-                if (itemSetHistory.count(pattern))
-                    continue;
-                else
-                    itemSetHistory[pattern] = 1;
-
-                // lookup support from transations
-                for (set<string> const &trans : transations)
-                {
-                    // get union of this freq itemset with transation
-                    set<string> ts;
-                    // if intersection count == this pattern means it show in transation
-                    set_intersection(tempAsso.itemSet.begin(), tempAsso.itemSet.end(), trans.begin(), trans.end(), inserter(ts, ts.begin()));
-
-                    if (ts.size() == tempAsso.itemSet.size())
-                    {
-                        tempAsso.support++;
-                    }
-                }
-                // delete if support < minup
-                if (tempAsso.support < minSup)
-                    continue;
-                else
-                {
-                    currItemSet.push_back(tempAsso);
-                    result.push_back(tempAsso);
-                }
-            }
-        }
-        freqItemSet = currItemSet;
-    }
-
-    return result;
-}
+#include "apriori.h"
 
 // get all transations
-vector<vector<string>> readData(string filePath)
+vector<vector<string>> readIBMData(string filePath)
 {
-    int id, tranID;
-    string item;
+    string id, tranID, item;
 
     ifstream infile(filePath);
 
-    map<int, vector<string>> datas;
+    map<string, vector<string>> datas;
 
     while (infile >> id >> tranID >> item)
     {
@@ -125,44 +24,25 @@ vector<vector<string>> readData(string filePath)
     return result;
 }
 
-// generate all  possible {a}=>{b} patterns and print support & confidence
-// given itemset { 1, 2, 3} , return all combination  of {} => {} ex. like {1}=>{2,3}
-vector<pair<string, string>> allCombination(const set<string> &freqItemSet)
+vector<vector<string>> readKaggleData(string filepath)
 {
-    vector<pair<string, string>> result;
 
-    queue<pair<string, string>> que;
+    string inp;
+    ifstream infile(filepath);
 
-    vector<string> itemSet(freqItemSet.begin(), freqItemSet.end());
+    map<string, vector<string>> datas;
 
-    que.push(make_pair("", ""));
-
-    int index = 0;
-
-    while (que.size() && index < itemSet.size())
+    while (getline(infile, inp))
     {
-
-        int n = que.size();
-        while (n--)
-        {
-            auto temp1 = que.front();
-            auto temp2 = que.front();
-            que.pop();
-
-            temp1.first += itemSet[index] + ", ";
-            temp2.second += itemSet[index] + ", ";
-
-            que.push(temp1);
-            que.push(temp2);
-        }
-        index++;
+        datas[inp.substr(0, inp.find(','))].push_back(inp.substr(inp.find(',') + 1));
     }
-    while (que.size())
+
+    vector<vector<string>> result;
+    for (auto &d : datas)
     {
-        if (que.front().first != "" && que.front().second != "")
-            result.push_back(que.front());
-        que.pop();
+        result.push_back(d.second);
     }
+
     return result;
 }
 
@@ -180,6 +60,7 @@ void printResult(const vector<assoInfo> &freqSet, string setPath, string rulePat
     rulefile.open(rulePath);
 
     // create itemset:freq map
+    rulefile << "count | itemSet\n";
     for (const auto &fSet : freqSet)
     {
         string k = "";
@@ -187,7 +68,8 @@ void printResult(const vector<assoInfo> &freqSet, string setPath, string rulePat
             k += item + ", ";
 
         ruleCount[k] = fSet.support;
-        rulefile << k << " | " << fSet.support << "\n";
+
+        rulefile << setw(5) << setprecision(4) << fSet.support << " | { " << k << "}\n";
     }
     rulefile.close();
 
@@ -210,7 +92,7 @@ void printResult(const vector<assoInfo> &freqSet, string setPath, string rulePat
             if (confi < minConfidence)
                 continue;
 
-            myfile << setprecision(4) << setw(5) << sup << " | " << setw(5) << confi << " | ";
+            myfile << setprecision(5) << setw(5) << sup << " | " << setprecision(5) << setw(5) << confi << " | ";
             myfile << "{ " << comb.first << "} => { " << comb.second << "}\n";
 
             totalRules++;
@@ -220,37 +102,53 @@ void printResult(const vector<assoInfo> &freqSet, string setPath, string rulePat
     myfile.close();
 }
 
+void test(string mode, const vector<vector<string>> &datas, float minSupport = 0.1, float confidence = 0.2)
+{
+    int mSup = int(minSupport * datas.size());
+    vector<assoInfo> freqItemSet;
+
+    cout << "starting test / mode = " << mode << "\n";
+    cout << "data count:" << datas.size() << "\n";
+    cout << "minSup: " << mSup << "\n";
+
+    auto start = chrono::steady_clock::now();
+    if (mode == "fp")
+    {
+        fpTree tree(mSup);
+        tree.buildTree(datas);
+        freqItemSet = tree.fpMining(assoInfo());
+    }
+    else if (mode == "ap")
+    {
+        freqItemSet = apriori(datas, mSup);
+    }
+
+    auto end = chrono::steady_clock::now();
+
+    // Store the time difference between start and end
+    auto diff = end - start;
+    cout << chrono::duration<double, milli>(diff).count() << " ms" << endl;
+
+    if (mode == "fp")
+    {
+        printResult(freqItemSet, "./fp_result.txt", "./fp_rule.txt", minSupport, confidence, datas.size());
+    }
+    else
+    {
+        printResult(freqItemSet, "./ap_result.txt", "./ap_rule.txt", minSupport, confidence, datas.size());
+    }
+}
+
 int main()
 {
 
-    float minSupport = 0.1, confidence = 0.2;
+    //
 
-    // read data
-    vector<vector<string>> datas = readData("./data.txt");
+    auto ibmData = readIBMData("./dataset/IBM5000.txt");
+    test("fp", ibmData, 0.1, 0.2);
+    test("ap", ibmData, 0.1, 0.2);
 
-    /* some toy
-    vector<vector<string>> datas = {
-        {"milk", "bread", "beer"},
-        {"bread", "coffee"},
-        {"bread", "egg"},
-        {"milk", "bread", "coffee"},
-        {"milk", "egg"},
-        {"bread", "egg"},
-        {"milk", "egg"},
-        {"milk", "bread", "egg", "beer"},
-        {"milk", "bread", "egg"},
-    };*/
-
-    int mSup = int(minSupport * datas.size());
-
-    fpTree tree(mSup);
-    tree.buildTree(datas);
-
-    // find all freq itemSet
-    vector<assoInfo> tree_ans = tree.fpMining(assoInfo());
-    vector<assoInfo> ap_ans = apriori(datas, mSup);
-
-    // generate all  possible {a}=>{b} patterns and print support & confidence
-    printResult(tree_ans, "./fp_result.txt", "./fp_rule.txt", minSupport, confidence, datas.size());
-    printResult(ap_ans, "./ap_result.txt", "./ap_rule.txt", minSupport, confidence, datas.size());
+    auto kaggleData = readKaggleData("./dataset/kaggle.txt");
+    test("fp", ibmData, 0.006, 0.05);
+    test("ap", ibmData, 0.006, 0.05);
 }

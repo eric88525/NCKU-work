@@ -1,34 +1,4 @@
-#pragma once
-#include <iostream>
-#include <vector>
-#include <string>
-#include <map>
-#include <fstream>
-#include <algorithm>
-#include <set>
-#include <queue>
-#include <iomanip>
-#include <unordered_map>
-
-using namespace std;
-
-// record the itemset ans it's support count
-class assoInfo
-{
-public:
-    // itemSet
-    set<string> itemSet;
-    // support count
-    int support;
-
-    assoInfo() : itemSet({}), support(0) {}
-    assoInfo(set<string> itemSet, int support) : itemSet(itemSet), support(support) {}
-    assoInfo(const assoInfo &p1)
-    {
-        this->itemSet = p1.itemSet;
-        this->support = p1.support;
-    }
-};
+#include "association.h"
 
 class treeNode
 {
