@@ -90,7 +90,8 @@ void printResult(const vector<assoInfo> &freqSet, string setPath, string rulePat
 
             if (confi > 1)
                 cout << "wrong\n";
-            if (confi < minConfidence)
+
+            if (confi < minConfidence || sup < minSupport)
                 continue;
 
             myfile << setprecision(5) << setw(5) << sup << " | " << setprecision(5) << setw(5) << confi << " | ";
@@ -157,14 +158,13 @@ int main()
     // confidence: min confidence
 
     // test on ibm data
-    auto ibmData = readIBMData("./dataset/IBM2021.txt");
-    test("fp", ibmData, 0.01, 0.001);
-    test("ap", ibmData, 0.01, 0.001);
+    //auto ibmData = readIBMData("./dataset/IBM2021.txt");
+    //test("fp", ibmData, 0.015, 0.001);
+    // test("ap", ibmData, 0.01, 0.8);
 
     // test on kaggle data
-    /*
+
     auto kaggleData = readKaggleData("./dataset/Groceries_dataset.txt");
     test("fp", kaggleData, 0.01, 0.001);
-    test("ap", kaggleData, 0.01, 0.001);
-    */
+    // test("ap", kaggleData, 0.01, 0.001);
 }

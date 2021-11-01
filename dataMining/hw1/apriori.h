@@ -86,10 +86,11 @@ vector<assoInfo> apriori(const vector<vector<string>> &data, int minSup)
                         tempAsso.support++;
                 }
 
-                if (tempAsso.support < minSup)
-                    continue;
-                result.push_back(tempAsso);
-                freqItemSet.push(tempAsso);
+                if (tempAsso.support >= minSup)
+                {
+                    result.push_back(tempAsso);
+                    freqItemSet.push(tempAsso);
+                }
             }
             freqItemSet.pop();
         }
