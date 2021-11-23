@@ -158,13 +158,19 @@ int main()
     // confidence: min confidence
 
     // test on ibm data
-    //auto ibmData = readIBMData("./dataset/IBM2021.txt");
-    //test("fp", ibmData, 0.015, 0.001);
-    // test("ap", ibmData, 0.01, 0.8);
+    auto ibmData = readIBMData("./dataset/IBM2021.txt");
+
+    //test("ap", ibmData, 0.01, 0.8);
 
     // test on kaggle data
 
     auto kaggleData = readKaggleData("./dataset/Groceries_dataset.txt");
-    test("fp", kaggleData, 0.01, 0.001);
+    //test("fp", kaggleData, 0.01, 0.001);
     // test("ap", kaggleData, 0.01, 0.001);
+
+    vector<float> ss = {0.001, 0.005, 0.01};
+    for (auto s : ss)
+    {
+        test("fp", kaggleData, s, 0.1);
+    }
 }
