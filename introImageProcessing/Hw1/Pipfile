@@ -5,9 +5,12 @@ name = "pypi"
 
 [packages]
 opencv-contrib-python = "3.4.2.17"
-matplotlib = "3.1.1"
+matplotlib = "*"
 PyQt5 = "5.15.1"
 numpy = "*"
+pytorch-model-summary = "*"
+torch = "1.10.0"
+torchvision = "0.11.1"
 
 [dev-packages]
 
