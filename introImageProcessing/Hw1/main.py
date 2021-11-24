@@ -14,13 +14,13 @@ class mainPage(QtWidgets.QMainWindow, QtWidgets.QDialog):
 
         self.load_template_img()
 
-        # Part 1
+        # Q1
         self.LoadImageButton.clicked.connect(self.load_img)
         self.ColorSeperationButton.clicked.connect(self.color_seperation)
         self.ColorTransButton.clicked.connect(self.color_transformation)
         self.BlendButton.clicked.connect(self.blending)
 
-        # Part 2
+        # Q2
         self.GaussianBlurButton.clicked.connect(
             lambda: self.smoothing(smooth_type="gaussian"))
         self.BilateralButton.clicked.connect(
@@ -28,7 +28,7 @@ class mainPage(QtWidgets.QMainWindow, QtWidgets.QDialog):
         self.MedianButton.clicked.connect(
             lambda: self.smoothing(smooth_type="median"))
 
-        # Part 3
+        # Q3
         self.EdgeGaussianBlurButton.clicked.connect(
             lambda: self.blur(blur_type="gaussian"))
         self.SobelXButton.clicked.connect(
@@ -38,7 +38,7 @@ class mainPage(QtWidgets.QMainWindow, QtWidgets.QDialog):
         self.MagnitudeButton.clicked.connect(
             lambda: self.blur(blur_type="magnitude"))
 
-        # Part 4
+        # Q4
         self.ResizeButton.clicked.connect(self.resize_img)
         self.TranslationButton.clicked.connect(self.transalation)
         self.RotationScalButton.clicked.connect(self.rotation_scale)
