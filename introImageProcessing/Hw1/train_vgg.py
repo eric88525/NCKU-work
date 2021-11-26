@@ -65,14 +65,17 @@ def train(train_config, train_loader, test_loader=None):
 
     train_loss_record = [{} for i in range(train_config["epoch"])]
 
-    best_performance = 10000
+    if test_loader != None:
+        best_performance = 0
+    else:
+        best_performance = 1000
+
     best_model = None
 
     for epoch_idx in range(train_config["epoch"]):
 
         model.train()
         epoch_loss = 0
-
         train_datacount = 0
         # check acc
         accuracy = 0
@@ -113,23 +116,28 @@ def train(train_config, train_loader, test_loader=None):
             test_acc = test(model, test_loader)
             train_loss_record[epoch_idx]["test_acc"] = test_acc
 
-            if test_acc < best_performance:
+            if test_acc > best_performance:
                 best_performance = test_acc
                 best_model = copy.deepcopy(model)
+
+                torch.save(best_model.state_dict(),
+                           train_config["model_name"] + ".pt")
+                print(f"save model as {train_config['model_name']}.pt")
         else:
             if epoch_loss < best_performance:
                 best_performance = epoch_loss
                 best_model = copy.deepcopy(model)
 
-    torch.save(best_model.state_dict(), train_config["model_name"] + ".pt")
-    print(f"save model as {train_config['model_name']}.pt")
+                torch.save(best_model.state_dict(),
+                           train_config["model_name"] + ".pt")
+                print(f"save model as {train_config['model_name']}.pt")
 
     return train_loss_record
 
 
 def test(model, test_loader):  # given model & test_loader , return acc
 
-    test_count = len(test_loader.dataset)
+    test_count = 0
     acc_count = 0
 
     model.eval()
