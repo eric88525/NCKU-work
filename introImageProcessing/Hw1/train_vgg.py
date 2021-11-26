@@ -9,6 +9,16 @@ from tqdm import tqdm
 import pickle
 import copy
 
+train_config = {
+    "model_name": "vgg-epo512",
+    "batch_size": 128,
+    "learning_rate": 0.001,
+    "epoch": 1,
+    "device": torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu"),
+    "momentum": 0.9,
+    "weight_decay": 1e-4
+}
+
 
 def get_train_test_data(batch_size=4):  # dataloader
 
@@ -31,22 +41,13 @@ class VGG_class10(nn.Module):  # classifier model
     def __init__(self):
         super(VGG_class10, self).__init__()
 
-        self.m = nn.Sequential(
+        self.classifier = nn.Sequential(
             models.vgg16(),
             nn.Linear(1000, 10)
         )
-#self.vgg = models.vgg16()
-# self.classifier = nn.Sequential(
-#    nn.Linear(1000, 512),
-#    nn.Linear(512, 10),
-# )
 
     def forward(self, inp):
-
-        #model_output = self.vgg(input)
-        #class_pred = self.classifier(model_output)
-        # return class_pred
-        return self.m(inp)
+        return self.classifier(inp)
 
 
 def train(train_config, train_loader, test_loader=None):
@@ -159,16 +160,6 @@ def save_to_pickle(data: object, fname):  # save obj to pickle
 
 
 def main():
-
-    train_config = {
-        "model_name": "vgg-epo512",
-        "batch_size": 128,
-        "learning_rate": 0.001,
-        "epoch": 1,
-        "device": torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu"),
-        "momentum": 0.9,
-        "weight_decay": 1e-4
-    }
 
     train_loader, test_loader = get_train_test_data(
         batch_size=train_config["batch_size"])
