@@ -65,7 +65,11 @@ def train(train_config, train_loader, test_loader=None):
 
     train_loss_record = [{} for i in range(train_config["epoch"])]
 
-    best_performance = 10000
+    if test_loader != None:  # judge by test acc rate
+        best_performance = 0
+    else:  # judge by epo loss
+        best_performance = 10000
+
     best_model = None
 
     for epoch_idx in range(train_config["epoch"]):
@@ -107,14 +111,17 @@ def train(train_config, train_loader, test_loader=None):
             f"epoch: {epoch_idx} ACC = { accuracy /  train_datacount } ({accuracy}/{train_datacount})")
 
         train_loss_record[epoch_idx]["train_acc"] = accuracy / train_datacount
-        # test part(acc)
+
+        # save model by test acc rate
         if test_loader != None:
+
             test_acc = test(model, test_loader)
-            train_loss_record[epoch_idx]["test_acc"] = accuracy / \
-                train_datacount
-            if test_acc < best_performance:
+            train_loss_record[epoch_idx]["test_acc"] = test_acc
+
+            if test_acc > best_performance:
                 best_performance = test_acc
                 best_model = copy.deepcopy(model)
+        # save model by epoch loss
         else:
             if epoch_loss < best_performance:
                 best_performance = epoch_loss
@@ -128,7 +135,7 @@ def train(train_config, train_loader, test_loader=None):
 
 def test(model, test_loader):  # given model & test_loader , return acc
 
-    test_count = len(test_loader.dataset)
+    test_count = 0
     acc_count = 0
 
     model.eval()
@@ -141,13 +148,8 @@ def test(model, test_loader):  # given model & test_loader , return acc
 
             _, pred = torch.max(model(x).data, 1)
 
-            #print(model(x).shape, pred.shape, y.shape)
-
-            #print("test pred", pred)
-
             test_count += y.shape[0]
             acc_count += (pred == y).sum().item()
-            # print(acc_count)
 
     print(
         f"test end , acc rate: {acc_count / test_count :.2f} ({acc_count}/{test_count})")
