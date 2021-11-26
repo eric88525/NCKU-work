@@ -108,15 +108,29 @@ class Q5(QtWidgets.QMainWindow, QtWidgets.QDialog):
     def test_model(self):
 
         idx = self.TestIndexInput.value()-1
+
+        if idx >= len(test_data):
+            print("out of idx")
+            return
+
         img, _ = test_data[idx]
-        img = img.unsqueeze(0)
 
+        plt.figure(figsize=(18, 5))
+
+        # show img
+        plt.subplot(1, 2, 1)
+        plt.title("Test Image")
+        plt.axis("off")
+        temp_img_ = img.transpose(0, 1).transpose(1, 2)
+        plt.imshow(temp_img_)
+
+        # show pred
         with torch.no_grad():
-            pred = torch.softmax(self.model(img), dim=-1).squeeze().numpy()
-
+            pred = torch.softmax(self.model(
+                img.unsqueeze(0)), dim=-1).squeeze().numpy()
             x_ = [self.img_class_name[i] for i in range(10)]
 
-            plt.figure()
+            plt.subplot(1, 2, 2)
             plt.bar(x_,  pred)
             plt.show()
 
