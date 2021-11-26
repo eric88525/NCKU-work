@@ -11,9 +11,9 @@ import copy
 
 train_config = {
     "model_name": "vgg-epo512",
-    "batch_size": 128,
+    "batch_size": 64,
     "learning_rate": 0.001,
-    "epoch": 1,
+    "epoch": 30,
     "device": torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu"),
     "momentum": 0.9,
     "weight_decay": 1e-4
@@ -31,7 +31,7 @@ def get_train_test_data(batch_size=4):  # dataloader
                        transform=test_transform, download=True)
 
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
-    test_loader = DataLoader(test_set, batch_size=batch_size * 2)
+    test_loader = DataLoader(test_set, batch_size=512)
 
     return train_loader, test_loader
 
@@ -65,11 +65,7 @@ def train(train_config, train_loader, test_loader=None):
 
     train_loss_record = [{} for i in range(train_config["epoch"])]
 
-    if test_loader != None:  # judge by test acc rate
-        best_performance = 0
-    else:  # judge by epo loss
-        best_performance = 10000
-
+    best_performance = 10000
     best_model = None
 
     for epoch_idx in range(train_config["epoch"]):
@@ -111,17 +107,15 @@ def train(train_config, train_loader, test_loader=None):
             f"epoch: {epoch_idx} ACC = { accuracy /  train_datacount } ({accuracy}/{train_datacount})")
 
         train_loss_record[epoch_idx]["train_acc"] = accuracy / train_datacount
-
-        # save model by test acc rate
+        # test part(acc)
         if test_loader != None:
 
             test_acc = test(model, test_loader)
             train_loss_record[epoch_idx]["test_acc"] = test_acc
 
-            if test_acc > best_performance:
+            if test_acc < best_performance:
                 best_performance = test_acc
                 best_model = copy.deepcopy(model)
-        # save model by epoch loss
         else:
             if epoch_loss < best_performance:
                 best_performance = epoch_loss
@@ -135,7 +129,7 @@ def train(train_config, train_loader, test_loader=None):
 
 def test(model, test_loader):  # given model & test_loader , return acc
 
-    test_count = 0
+    test_count = len(test_loader.dataset)
     acc_count = 0
 
     model.eval()
