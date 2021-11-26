@@ -3,43 +3,71 @@ import sys
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from train_vgg import get_train_test_data, train_config
+import torch
+from train_vgg import get_train_test_data, test, train_config, VGG_class10
 from torchsummary import summary
 import torchvision.models as models
+import pickle
+
 
 # load dataset
 train_data, test_data = get_train_test_data()
 train_data = train_data.dataset
 test_data = test_data.dataset
 
-img_class_name = [
-    'airplane', 'autombile', 'bird', 'cat', 'deer',
-    'dog', 'frog', 'horse', 'ship', 'truck']
+# class name of dataset
 
 
 class Q5(QtWidgets.QMainWindow, QtWidgets.QDialog):
     def __init__(self):
         super(Q5, self).__init__()
+
         uic.loadUi('Q5.ui', self)
 
-        #
+        # load model & record
+        self.load_model_and_record(
+            record_path="loss_vgg-epo30.pkl", model_path="vgg-epo30.pt")
+
+        self.img_class_name = [
+            'airplane', 'autombile', 'bird', 'cat', 'deer',
+            'dog', 'frog', 'horse', 'ship', 'truck']
+
+        # buttons
         self.ShowTrainImageButton.clicked.connect(self.show_train_img)
         self.ShowHyperParameterButton.clicked.connect(
             self.show_hyper_parameter)
         self.ShowModelShortCutButton.clicked.connect(self.show_model_shortcut)
         self.ShowAccButton.clicked.connect(self.show_acc_button)
+        self.TestButton.clicked.connect(self.test_model)
 
         self.show()
 
+    def load_model_and_record(self, record_path="loss_vgg-epo30.pkl", model_path="vgg-epo30.pt"):
+
+        # read record
+        record = None
+        with open(record_path, "rb") as f:
+            record = pickle.load(f)
+
+        self.train_acc = [x['train_acc'] for x in record]
+        self.test_acc = [x['test_acc'] for x in record]
+        self.train_loss = [x['train_loss'] for x in record]
+
+        # load model
+        self.model = VGG_class10()
+        self.model.load_state_dict(torch.load(
+            model_path, map_location=torch.device("cpu")))
+        self.model.eval()
+
     def show_train_img(self):
 
-        fig, axs = plt.subplots()
+        fig, _ = plt.subplots()
         fig.subplots_adjust(hspace=.3, wspace=.3)
 
         for i, (image, label) in enumerate(train_data, start=1):
             plt.subplot(3, 3, i)
             plt.axis('off')
-            plt.title(img_class_name[label])
+            plt.title(self.img_class_name[label])
             plt.imshow(np.moveaxis(image.numpy(), 0, -1))
             if i == 9:
                 break
@@ -55,7 +83,42 @@ class Q5(QtWidgets.QMainWindow, QtWidgets.QDialog):
         summary(models.vgg16(), (3, 32, 32))
 
     def show_acc_button(self):
-        pass
+
+        # ACC plot
+        plt.subplot(2, 1, 1)
+        x = [i for i in range(len(self.train_acc))]
+        plt.plot(x, self.train_acc, label="train_acc")
+        plt.plot(x, self.test_acc, label="test_acc")
+
+        plt.xlabel("epoch")
+        plt.ylabel("%")
+        plt.legend(loc="lower right")
+
+        # loss plot
+        plt.subplot(2, 1, 2)
+        x = [i for i in range(len(self.train_loss))]
+        plt.xlabel("epoch")
+        plt.ylabel("loss")
+        plt.plot(x, self.train_loss, label="train_loss")
+
+        plt.suptitle("Accuracy")
+
+        plt.show()
+
+    def test_model(self):
+
+        idx = self.TestIndexInput.value()-1
+        img, _ = test_data[idx]
+        img = img.unsqueeze(0)
+
+        with torch.no_grad():
+            pred = torch.softmax(self.model(img), dim=-1).squeeze().numpy()
+
+            x_ = [self.img_class_name[i] for i in range(10)]
+
+            plt.figure()
+            plt.bar(x_,  pred)
+            plt.show()
 
 
 if __name__ == "__main__":
