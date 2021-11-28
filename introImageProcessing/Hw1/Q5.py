@@ -15,8 +15,6 @@ train_data, test_data = get_train_test_data()
 train_data = train_data.dataset
 test_data = test_data.dataset
 
-# class name of dataset
-
 
 class Q5(QtWidgets.QMainWindow, QtWidgets.QDialog):
     def __init__(self):
@@ -28,6 +26,7 @@ class Q5(QtWidgets.QMainWindow, QtWidgets.QDialog):
         self.load_model_and_record(
             record_path="loss_vgg-epo30.pkl", model_path="vgg-epo30.pt")
 
+        # class name of dataset
         self.img_class_name = [
             'airplane', 'autombile', 'bird', 'cat', 'deer',
             'dog', 'frog', 'horse', 'ship', 'truck']
@@ -44,7 +43,7 @@ class Q5(QtWidgets.QMainWindow, QtWidgets.QDialog):
 
     def load_model_and_record(self, record_path="loss_vgg-epo30.pkl", model_path="vgg-epo30.pt"):
 
-        # read record
+        # read train/test record
         record = None
         with open(record_path, "rb") as f:
             record = pickle.load(f)

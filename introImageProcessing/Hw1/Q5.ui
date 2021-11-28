@@ -65,7 +65,11 @@
      </widget>
     </item>
     <item>
-     <widget class="QSpinBox" name="TestIndexInput"/>
+     <widget class="QSpinBox" name="TestIndexInput">
+      <property name="maximum">
+       <number>10000</number>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QPushButton" name="TestButton">

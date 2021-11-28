@@ -189,12 +189,11 @@ class mainPage(QtWidgets.QMainWindow, QtWidgets.QDialog):
         elif blur_type == "sobel_x":
             kernel = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
             result = self.conv2D(self.gaussian_house, kernel)
-            pass
 
         elif blur_type == "sobel_y":
             kernel = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]])
             result = self.conv2D(self.gaussian_house, kernel)
-            pass
+
         elif blur_type == "magnitude":
             kernel_x = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
             kernel_y = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]])
