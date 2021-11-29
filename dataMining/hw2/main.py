@@ -5,6 +5,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn import tree
 import matplotlib.pyplot as plt
 
+# q56104076
 
 random.seed(2021)
 np.random.seed(2021)
@@ -78,6 +79,8 @@ def main():
     tree.plot_tree(model, feature_names=attributes,
                    class_names=model.classes_, filled=True, max_depth=5, fontsize=6)
     plt.savefig("tree.png", bbox_inches='tight', dpi=150)
+    print("save tree picture as tree.png")
+    # show plt or not
     # plt.show()
 
 
