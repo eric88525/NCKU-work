@@ -69,6 +69,7 @@ def main():
 
     # save to pickle file
     save_to_pickle(np.array(all_data , dtype=object) , "./Q1_data.pkl")
-    print("save to ./Q1_data.pkl")
+    print("save as ./Q1_data.pkl")
+
 if __name__ == "__main__":
     main()

@@ -130,6 +130,7 @@ def main():
         # peak index
         peaks = detect_peaks(signal )
 
+        # 10s peaks * 6 = 10s peakss
         result.append([  f"{IMG_PATHS[img_idx]}"   ,  peaks*6 ])
 
     # save to csv
