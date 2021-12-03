@@ -1,2 +1,4 @@
 *.jpg
 *.pkl
+EKG_seg/*
+*.zip

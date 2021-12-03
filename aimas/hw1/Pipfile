@@ -9,6 +9,9 @@ matplotlib = "*"
 numpy = "*"
 tqdm = "*"
 pandas = "*"
+torch = "*"
+torchvision = "*"
+sklearn = "*"
 
 [dev-packages]
 
