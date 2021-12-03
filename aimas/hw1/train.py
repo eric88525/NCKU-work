@@ -20,35 +20,43 @@ import os
 
 def get_train_test_loader():
 
-    split = train_test_split(config.IMG_PATH, config.LABEL_PATH,
-                             test_size=config.TEST_SPLIT, random_state=42)
-
-    # unpack the data split
-    train_img, test_img = split[:2]
-    train_label, test_label = split[2:]
-
-    print(f"Train data: {len(train_img)} Test data: {len(test_img)}")
-
-    f = open(config.TEST_PATHS, "w")
-    f.write("\n".join(test_img))
-    f.close()
+    trainLoader, testLoader = None, None
 
     img_transforms = transforms.Compose([transforms.ToPILImage(),
                                          transforms.Resize((config.INPUT_IMAGE_HEIGHT,
                                                             config.INPUT_IMAGE_WIDTH)),
                                          transforms.ToTensor()])
 
+    if config.TEST_SPLIT > 0:
+        split = train_test_split(config.IMG_PATH, config.LABEL_PATH,
+                                 test_size=config.TEST_SPLIT, random_state=42)
+
+        # unpack the data split
+        train_img, test_img = split[:2]
+
+        train_label, test_label = split[2:]
+
+        print(f"Train data: {len(train_img)} Test data: {len(test_img)}")
+
+        f = open(config.TEST_PATHS, "w")
+        f.write("\n".join(test_img))
+        f.close()
+
+        testDS = SegDataset(img_path=test_img, label_path=test_label,
+                            img_transforms=img_transforms)
+        testLoader = DataLoader(testDS, shuffle=False,
+                                batch_size=config.BATCH_SIZE,
+                                num_workers=4)
+    else:
+        train_img = config.IMG_PATH
+        train_label = config.LABEL_PATH
+
     trainDS = SegDataset(img_path=train_img, label_path=train_label,
                          img_transforms=img_transforms)
-    testDS = SegDataset(img_path=test_img, label_path=test_label,
-                        img_transforms=img_transforms)
 
     trainLoader = DataLoader(trainDS, shuffle=True,
                              batch_size=config.BATCH_SIZE,
                              num_workers=4)
-    testLoader = DataLoader(testDS, shuffle=False,
-                            batch_size=config.BATCH_SIZE,
-                            num_workers=4)
 
     return trainLoader, testLoader
 
@@ -104,10 +112,12 @@ def train(train_loader, test_loader=None):
             print(f"Test loss: {epoch_test_loss:.6f}")
 
             if epoch_test_loss < best_performance:
+                best_performance = epoch_test_loss
                 best_model = copy.deepcopy(model)
 
         else:
             if epoch_train_loss < best_performance:
+                best_performance = epoch_train_loss
                 best_model = copy.deepcopy(model)
 
     endTime = time.time()
