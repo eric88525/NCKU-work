@@ -21,7 +21,7 @@ LABEL_PATH = [os.path.sep.join(
 # define the test split
 TEST_SPLIT = 0
 # determine the device to be used for training and evaluation
-DEVICE = "cuda:1" if torch.cuda.is_available() else "cpu"
+DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 # define the number of channels in the input, number of classes,
 # and number of levels in the U-Net model
@@ -40,8 +40,9 @@ INPUT_IMAGE_HEIGHT = 315  # 直向
 THRESHOLD = 0.5
 # define the path to the base output directory
 BASE_OUTPUT = "output"
+
 # define the path to the output serialized model, model training
 # plot, and testing image paths
-MODEL_PATH = os.path.join(BASE_OUTPUT, "model-v2-01.pt")
+MODEL_PATH = os.path.join(BASE_OUTPUT, "Q3-model.pt")
 PLOT_PATH = os.path.sep.join([BASE_OUTPUT, "Q3-plot.png"])
 TEST_PATHS = os.path.sep.join([BASE_OUTPUT, "Q3-test_paths.txt"])

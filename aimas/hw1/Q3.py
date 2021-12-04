@@ -1,6 +1,3 @@
-# USAGE
-# python predict.py
-# import the necessary packages
 from imageseg import config
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,7 +6,7 @@ import cv2
 import os
 
 
-def prepare_plot(origImage, origMask, predMask):
+def prepare_plot(origImage, origMask, predMask, idx):
     # initialize our figure
     figure, ax = plt.subplots(nrows=3, ncols=1, figsize=(10, 10))
     # plot the original image, its mask, and the predicted mask
@@ -23,10 +20,10 @@ def prepare_plot(origImage, origMask, predMask):
     # set the layout of the figure and display it
     figure.tight_layout()
     figure.show()
-    plt.savefig("Q3_demo.jpg")
+    plt.savefig(os.path.sep.join([config.BASE_OUTPUT, f"Q3-demo-{idx}.jpg"]))
 
 
-def make_predictions(model, imagePath):
+def make_predictions(model, imagePath, idx):
     # set model to evaluation mode
     model.eval()
     # turn off gradient tracking
@@ -55,9 +52,9 @@ def make_predictions(model, imagePath):
             (config.INPUT_IMAGE_HEIGHT, config.INPUT_IMAGE_WIDTH, 3))
 
         # green
-        color_mask[(predMask[1] > 0.5), 1] = 255
+        color_mask[(predMask[1] > 0.5), 1] = 254
         # red
-        color_mask[(predMask[0] > 0.5), 0] = 255
+        color_mask[(predMask[0] > 0.5), 0] = 254
 
         # label
         groundTruthPath = imagePath.replace("img.png", "label.png")
@@ -67,26 +64,18 @@ def make_predictions(model, imagePath):
         gtMask = cv2.cvtColor(gtMask, cv2.COLOR_BGR2RGB)
 
         # prepare a plot for visualization
-        prepare_plot(orig, gtMask, color_mask)
+        prepare_plot(orig, gtMask, color_mask, idx)
 
 
-# load the image paths in our testing file and randomly select 10
-# image paths
+# load the image paths in our file and randomly select 10
 print("[INFO] loading up test image paths...")
-#imagePaths = open(config.TEST_PATHS).read().strip().split("\n")
-#imagePaths = np.random.choice(imagePaths, size=10)
-# load our model from disk and flash it to the current device
-print("[INFO] load up model...")
+imagePaths = np.random.choice(config.IMG_PATH, size=10)
 
+print("[INFO] load up model...")
 unet = torch.load(config.MODEL_PATH).to(config.DEVICE)
 
-'''
-# iterate over the randomly selected test image paths
-for path in imagePaths:
-    #    # make predictions and visualize the results
-    make_predictions(unet,  path)
-    break
-'''
+# predict and save to image
 
-imagePaths = np.random.choice(config.IMG_PATH, size=1)
-make_predictions(unet,  imagePaths[0])
+for i in range(10):
+    print(f"Testing {imagePaths[i]}, save to Q3-demo-{i}.jpg")
+    make_predictions(unet,  imagePaths[i], i)

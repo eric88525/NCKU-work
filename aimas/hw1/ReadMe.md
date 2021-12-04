@@ -35,7 +35,7 @@ The dataset should be placed like:
 
 # Q1
 
-+ split all image under EKG_unzip to 12 parts and save as  **Q1_data.pkl**
++ for each image under EKG_unzip, split it to 12 parts and save as  **Q1_data.pkl**
 
 ```
 python Q1.py
@@ -43,8 +43,9 @@ python Q1.py
 
 # Q2
 
-+ read long lead II from **Q1_data.pkl** 
-+ counting heart beat by **cross corrrelation**
++ load 10s long lead II from **Q1_data.pkl** 
++ extract siganl by finding black pixel in image
++ counting heart beat by **cross corrrelation** 
 + save output as Q2.csv (column = ["image_path" , "heart beat"])
 ```
 python Q2.py
@@ -53,4 +54,26 @@ python Q2.py
 ![](./demo_picture/Q2-peak.jpg)
 
 # Q3
-+ train Unet model to segment p(red) and qrs(green) 
++ train Unet model for segment p(red) and qrs(green) 
++ set model config in **imageseg/config.py**
+
+> train model
++ you can set model config like batch or epoch in imageseg/config.py
+```
+python train.py
+```
+> test model
++ load model **Q3-model.pt**
++ randomly choice 10 image and test it,save outcome under output folder
+```
+python Q3.py
+```
+
+
+
+## Q3-result
+> training loss
+![](./demo_picture/Q3-plot.png)
+
+> predict
+![](./demo_picture/Q3-demo.jpg)
