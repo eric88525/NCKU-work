@@ -64,7 +64,7 @@ def get_train_test_loader():
 def train(train_loader, test_loader=None):
 
     # model , loss , optimizer
-    model = UNet().to(config.DEVICE)
+    model = UNet(nbClasses=config.NUM_CLASSES).to(config.DEVICE)
     lossFunc = BCEWithLogitsLoss(reduction='mean')
     opt = Adam(model.parameters(), lr=config.INIT_LR)
 
@@ -84,7 +84,7 @@ def train(train_loader, test_loader=None):
         epoch_train_loss = 0
 
         # loop over the training set
-        for i, batch in enumerate(tqdm(train_loader)):
+        for batch in tqdm(train_loader):
 
             (x, y) = (batch[0].to(config.DEVICE), batch[1].to(config.DEVICE))
 

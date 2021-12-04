@@ -26,22 +26,22 @@ DEVICE = "cuda:1" if torch.cuda.is_available() else "cpu"
 # define the number of channels in the input, number of classes,
 # and number of levels in the U-Net model
 NUM_CHANNELS = 1
-NUM_CLASSES = 1
+NUM_CLASSES = 2
 NUM_LEVELS = 3
 # initialize learning rate, number of epochs to train for, and the
 # batch size
 INIT_LR = 0.001
 NUM_EPOCHS = 40
-BATCH_SIZE = 8
+BATCH_SIZE = 4
 # define the input image dimensions
-INPUT_IMAGE_WIDTH = 892  # 橫向
-INPUT_IMAGE_HEIGHT = 630  # 直向
+INPUT_IMAGE_WIDTH = 486  # 橫向
+INPUT_IMAGE_HEIGHT = 315  # 直向
 # define threshold to filter weak predictions
 THRESHOLD = 0.5
 # define the path to the base output directory
 BASE_OUTPUT = "output"
 # define the path to the output serialized model, model training
 # plot, and testing image paths
-MODEL_PATH = os.path.join(BASE_OUTPUT, "model-03.pt")
-PLOT_PATH = os.path.sep.join([BASE_OUTPUT, "plot.png"])
-TEST_PATHS = os.path.sep.join([BASE_OUTPUT, "test_paths.txt"])
+MODEL_PATH = os.path.join(BASE_OUTPUT, "model-v2-01.pt")
+PLOT_PATH = os.path.sep.join([BASE_OUTPUT, "Q3-plot.png"])
+TEST_PATHS = os.path.sep.join([BASE_OUTPUT, "Q3-test_paths.txt"])

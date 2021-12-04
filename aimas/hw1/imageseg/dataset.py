@@ -26,18 +26,20 @@ class SegDataset(Dataset):
 
         if self.img_transforms is not None:
             image = self.img_transforms(image)
-        # image now is 3,width,height
 
+        # image now is 3,width,height
         label = cv2.imread(label_path, 0)
         label = self.img_transforms(label).squeeze()
 
-        # divide to 3 class Black , Red , Green
+        # divide to 2 class  Red , Green
         # (channel , width , height)
-        class_label = torch.zeros(image.shape)
+        class_label = torch.zeros([2, image.shape[-2], image.shape[-1]])
 
-        # if convert to gray scale , black=0 , red = 38 , green = 75,
-        class_label[0][label == 0] = 1.0
-        class_label[1][label == 38] = 1.0
-        class_label[2][label == 75] = 1.0
+        # if convert to gray scale , black=0 , red = 0.14.. , green = 0.2941,
+        class_label[0][(label != 0) * (label < 0.2)] = 1.0  # red
+        class_label[1][(label != 0) * (label > 0.2)] = 1.0  # green
+
+        if torch.sum(class_label[0]) == 0 and torch.sum(class_label[1]) == 0:
+            print(id)
 
         return (image, class_label)

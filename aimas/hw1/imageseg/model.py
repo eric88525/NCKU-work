@@ -7,6 +7,7 @@ from torch.nn import ModuleList
 from torch.nn import ReLU
 from torchvision.transforms import CenterCrop
 from torch.nn import functional as F
+import torch.nn as nn
 import torch
 
 
@@ -14,13 +15,23 @@ class Block(Module):
     def __init__(self, inChannels, outChannels):
         super().__init__()
         # store the convolution and RELU layers
-        self.conv1 = Conv2d(inChannels, outChannels, 3)
-        self.relu = ReLU()
-        self.conv2 = Conv2d(outChannels, outChannels, 3)
+
+        self.model = nn.Sequential(
+            nn.Conv2d(inChannels, outChannels, kernel_size=3, padding=1),
+            nn.BatchNorm2d(outChannels),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(outChannels, outChannels, kernel_size=3, padding=1),
+            nn.BatchNorm2d(outChannels),
+            nn.ReLU(inplace=True)
+        )
+        #self.conv1 = Conv2d(inChannels, outChannels, 3)
+        #self.relu = ReLU()
+        #self.conv2 = Conv2d(outChannels, outChannels, 3)
 
     def forward(self, x):
         # apply CONV => RELU => CONV block to the inputs and return it
-        return self.conv2(self.relu(self.conv1(x)))
+        # return self.conv2(self.relu(self.conv1(x)))
+        return self.model(x)
 
 
 class Encoder(Module):
@@ -84,8 +95,8 @@ class Decoder(Module):
 
 
 class UNet(Module):
-    def __init__(self, encChannels=(3, 16, 32, 64),
-                 decChannels=(64, 32, 16),
+    def __init__(self, encChannels=(3, 64, 128, 256, 512, 1024),
+                 decChannels=(1024, 512, 256, 128, 64),
                  nbClasses=3, retainDim=True,
                  outSize=(config.INPUT_IMAGE_HEIGHT,  config.INPUT_IMAGE_WIDTH)):
         super().__init__()
