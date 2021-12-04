@@ -36,9 +36,7 @@ def split_12_part(img):
     V5 = img[ 513:658 , 1037:1341 ]
     V6 = img[ 659:804 , 1037:1341 ]
 
-    long_II = img[ 805:927 , 112:1341 ]
-
-    all = [ I , II , III , aVR , aVL , avF , V1 , V2 , V3 , V4 , V5 , V6 , long_II]
+    all = [ I , II , III , aVR , aVL , avF , V1 , V2 , V3 , V4 , V5 , V6 ]
 
     return all
 
@@ -69,6 +67,7 @@ def main():
 
     # save to pickle file
     save_to_pickle(np.array(all_data , dtype=object) , "./Q1_data.pkl")
+
     print("save as ./Q1_data.pkl")
 
 if __name__ == "__main__":

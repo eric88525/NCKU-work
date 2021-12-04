@@ -51,9 +51,9 @@ def make_predictions(model, imagePath, idx):
             (config.INPUT_IMAGE_HEIGHT, config.INPUT_IMAGE_WIDTH, 3))
 
         # green
-        color_mask[(predMask[1] > 0.5), 1] = 254
+        color_mask[(predMask[1] > config.THRESHOLD), 1] = 254
         # red
-        color_mask[(predMask[0] > 0.5), 0] = 254
+        color_mask[(predMask[0] > config.THRESHOLD), 0] = 254
 
         # label
         groundTruthPath = imagePath.replace("img.png", "label.png")
