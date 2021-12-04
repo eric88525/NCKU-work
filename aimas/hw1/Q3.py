@@ -19,7 +19,6 @@ def prepare_plot(origImage, origMask, predMask, idx):
     ax[2].set_title("Predicted Mask")
     # set the layout of the figure and display it
     figure.tight_layout()
-    figure.show()
     plt.savefig(os.path.sep.join([config.BASE_OUTPUT, f"Q3-demo-{idx}.jpg"]))
 
 
@@ -72,7 +71,7 @@ print("[INFO] loading up test image paths...")
 imagePaths = np.random.choice(config.IMG_PATH, size=10)
 
 print("[INFO] load up model...")
-unet = torch.load(config.MODEL_PATH).to(config.DEVICE)
+unet = torch.load(config.MODEL_PATH , map_location=config.DEVICE).to(config.DEVICE)
 
 # predict and save to image
 
