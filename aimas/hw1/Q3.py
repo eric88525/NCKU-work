@@ -78,12 +78,8 @@ else:
     imagePaths = np.random.choice(config.IMG_PATH, size=10)
 
 print("[INFO] load up model...")
-<<<<<<< HEAD
 unet = torch.load(config.MODEL_PATH,
                   map_location=config.DEVICE).to(config.DEVICE)
-=======
-unet = torch.load(config.MODEL_PATH , map_location=config.DEVICE).to(config.DEVICE)
->>>>>>> 95c22cd2e66b6fc17fe4a76ff35e24ee367468f0
 
 # predict and save to image
 for i in range(len(imagePaths)):
