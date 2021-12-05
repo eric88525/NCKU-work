@@ -98,17 +98,21 @@ def detect_peaks(ecg_signal, threshold=0.45, qrs_filter=None):
 
     return peaks
 
+def read_long_II(img_path):
+    img = cv2.imread(img_path)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    long_II = img[ 805:927 , 112:1341 ]
+    return long_II
 
 def main():
 
-    # the data generate by Q1
-    data = load_from_pickle("./Q1_data.pkl")
-
-    # get last element(long lead II)
-    all_long_lead_II = [d[-1] for d in data]
+    # get long lead II
+    print("Loading long lead II...")
+    all_long_lead_II = [read_long_II(p) for p in IMG_PATHS]
 
     result = []
 
+    print("Counting peaks")
     for img_idx, lead_II in enumerate(tqdm(all_long_lead_II)):
 
         # signal from img
@@ -125,15 +129,6 @@ def main():
     df.to_csv("Q2.csv", index=False)
 
 
-def debug():
-    import re
-    IMG_PATHS = glob.glob("./EKG_unzip/*/*.jpg")
-    IMG_PATHS = sorted(IMG_PATHS, key=lambda x:  int(
-        str(re.search("[0-9]*.jpg", x)[0][:-4])))
-    print(IMG_PATHS[120:130])
-    pass
-
-
 if __name__ == "__main__":
     main()
-    # debug()
+

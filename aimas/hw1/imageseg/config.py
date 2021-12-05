@@ -37,7 +37,7 @@ BATCH_SIZE = 4
 INPUT_IMAGE_WIDTH = 486  # 橫向
 INPUT_IMAGE_HEIGHT = 315  # 直向
 # define threshold to filter weak predictions
-THRESHOLD = 0.5
+THRESHOLD = 0.6
 # define the path to the base output directory
 BASE_OUTPUT = "output"
 
