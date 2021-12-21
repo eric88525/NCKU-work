@@ -1,3 +1,5 @@
 *.pkl
 EKG_seg/*
 *.zip
+EKG_unzip/*
+*.jpg
