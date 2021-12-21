@@ -68,13 +68,20 @@ def make_predictions(model, imagePath, idx):
 
 # load the image paths in our file and randomly select 10
 print("[INFO] loading up test image paths...")
-imagePaths = np.random.choice(config.IMG_PATH, size=10)
+
+TEST = True  # test on test set or not
+
+if TEST:
+    imagePaths = open(config.TEST_PATHS).read().strip().split("\n")
+    imagePaths = np.random.choice(imagePaths, size=10)
+else:
+    imagePaths = np.random.choice(config.IMG_PATH, size=10)
 
 print("[INFO] load up model...")
-unet = torch.load(config.MODEL_PATH , map_location=config.DEVICE).to(config.DEVICE)
+unet = torch.load(config.MODEL_PATH,
+                  map_location=config.DEVICE).to(config.DEVICE)
 
 # predict and save to image
-
-for i in range(10):
+for i in range(len(imagePaths)):
     print(f"Testing {imagePaths[i]}, save to Q3-demo-{i}.jpg")
     make_predictions(unet,  imagePaths[i], i)
