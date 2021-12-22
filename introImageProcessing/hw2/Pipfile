@@ -4,16 +4,16 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-opencv-contrib-python = "3.4.2.17"
+opencv-contrib-python = "*"
 matplotlib = "*"
-PyQt5 = "5.15.1"
 numpy = "*"
-pytorch-model-summary = "*"
-torch = "1.10.0"
-torchvision = "0.11.1"
-torchsummary = "*"
+tqdm = "*"
+pandas = "*"
+torch = "*"
+torchvision = "*"
+sklearn = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.7"
+python_version = "3.8"

@@ -2,6 +2,9 @@ from PyQt5 import QtWidgets, uic
 import sys
 import cv2
 import numpy as np
+#from train_res50 import *
+
+
 
 class mainPage(QtWidgets.QMainWindow, QtWidgets.QDialog):
     def __init__(self):

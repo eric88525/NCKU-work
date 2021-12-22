@@ -19,7 +19,7 @@ import os
 
 
 def get_train_test_loader():
-
+    
     trainLoader, testLoader = None, None
 
     img_transforms = transforms.Compose([transforms.ToPILImage(),
