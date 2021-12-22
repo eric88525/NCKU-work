@@ -43,7 +43,7 @@ class cd_Dataset(Dataset):
         label = torch.Tensor([self.samples[index][-1]]).long()
         return  img , label
 
-def get_train_val_test_data(batch_size=4 , only_test = False):  # dataloader
+def get_train_val_test_data(batch_size=4 , only_test_dataset = False):  # dataloader
 
     MEAN, STD = (0.485, 0.456, 0.406), (0.229, 0.224, 0.225) # mean and std for ImageNet
     normalize = transforms.Normalize(mean=MEAN, std=STD)
@@ -72,7 +72,7 @@ def get_train_val_test_data(batch_size=4 , only_test = False):  # dataloader
     
     print(f"cat: {len(cat_samples)} , dogs: {len(dog_samples)}")
 
-    if only_test:
+    if only_test_dataset:
         test_samples = cat_samples[ int (n*0.9):] + dog_samples[ int (n*0.9):]
         test_set = cd_Dataset(test_samples , test_transform)
         return test_set
