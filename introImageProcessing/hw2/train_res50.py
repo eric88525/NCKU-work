@@ -1,11 +1,10 @@
 import glob
 import torch
 import torch.nn as nn
-from torchvision.datasets import CIFAR10
 from torch.utils.data import Dataset , DataLoader
 from torchvision import transforms
 import torchvision.models as models
-from torch.utils.tensorboard import SummaryWriter
+
 from torchvision import datasets, transforms
 from PIL import Image
 import numpy as np
@@ -24,11 +23,10 @@ train_config = {
 }
 
 class cd_Dataset(Dataset):
-    def __init__(self , samples ,transform=None  ) -> None:
-        
+    def __init__(self , samples ,transform=None , mask=False ) -> None:
         self.samples = samples
         self.transform = transform
-
+        self.mask = mask
     def __len__(self):
         return len(self.samples)
 
@@ -39,15 +37,35 @@ class cd_Dataset(Dataset):
         if img.mode != "RGB":
             img = img.convert("RGB")
 
+        if self.mask:
+            img = self.random_mask(img)
+
         img = self.transform(img)
         label = torch.Tensor([self.samples[index][-1]]).long()
         return  img , label
+
+    def random_mask(self , img, p= 0.5, sl = 0.02, sh = 0.4, r1 = 0.3):
+        if np.random.uniform(0, 1) > p:
+            return img
+        img = np.asarray(img, dtype=np.uint8)
+        # the PIL read file format is (H,W,3)
+        H,W = img.shape[0] , img.shape[1]
+        area = W*H
+        se = np.random.uniform(sl,sh) * area
+        re = np.random.uniform(r1,1/r1)
+        he = int(np.sqrt(se*re))
+        we = int(np.sqrt(se/re))
+        xe = int(np.random.uniform(0,W))
+        ye = int(np.random.uniform(0,H))
+        img[ye:ye+he,xe:xe+we,:] = [125, 122,114]
+        img = Image.fromarray(img,"RGB")
+        return img
 
 def get_train_val_test_data(batch_size=4 , only_test_dataset = False):  # dataloader
 
     MEAN, STD = (0.485, 0.456, 0.406), (0.229, 0.224, 0.225) # mean and std for ImageNet
     normalize = transforms.Normalize(mean=MEAN, std=STD)
-    
+
     # a set of common trasnformation combination for training
     train_transform = transforms.Compose([
         transforms.Resize(256),
@@ -65,11 +83,11 @@ def get_train_val_test_data(batch_size=4 , only_test_dataset = False):  # datalo
     ])
 
     cat_samples  =  [ (p,0) for p in glob.glob("PetImages/Cat/*.jpg") ]
-    dog_samples = [ (p,1) for p in glob.glob("PetImages/Dog/*.jpg")] 
-        
+    dog_samples = [ (p,1) for p in glob.glob("PetImages/Dog/*.jpg")]
+
     assert len(cat_samples) == len(dog_samples)
     n = len(cat_samples)
-    
+
     print(f"cat: {len(cat_samples)} , dogs: {len(dog_samples)}")
 
     if only_test_dataset:
@@ -85,15 +103,15 @@ def get_train_val_test_data(batch_size=4 , only_test_dataset = False):  # datalo
     print(f"train: {len(train_samples)} val: {len(val_samples)} test: {len(test_samples)}")
 
 
-    train_set = cd_Dataset(train_samples , train_transform)
-    val_set = cd_Dataset(val_samples , test_transform)
-    test_set = cd_Dataset(test_samples , test_transform)
+    train_set = cd_Dataset(train_samples , train_transform , mask=True)
+    val_set = cd_Dataset(val_samples , test_transform ,  mask=False)
+    test_set = cd_Dataset(test_samples , test_transform ,  mask=False)
 
 
     train_loader = DataLoader(train_set, batch_size = batch_size, shuffle=True)
     val_loader = DataLoader(val_set , batch_size = batch_size , shuffle= False)
     test_loader = DataLoader(test_set, batch_size=batch_size , shuffle=False)
-    
+
     return train_loader,val_loader ,test_loader
 
 
@@ -202,4 +220,5 @@ def main():
 
 
 if __name__ == "__main__":
+    from torch.utils.tensorboard import SummaryWriter
     main()

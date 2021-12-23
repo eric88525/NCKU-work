@@ -6,7 +6,6 @@ import glob
 import os
 from PIL import Image
 import numpy as np
-from sklearn.model_selection import train_test_split
 
 class cd_Dataset(Dataset):
     def __init__(self , samples ,transform=None  ) -> None:
@@ -37,11 +36,12 @@ def get_train_val_test_data(batch_size=4):  # dataloader
 
     cat_samples  =  [ (p,0) for p in glob.glob("PetImages/Cat/*.jpg") ]
     dog_samples = [ (p,1) for p in glob.glob("PetImages/Dog/*.jpg")] 
-        
 
+    check_img(cat_samples)
+    check_img(dog_samples)
     assert len(cat_samples) == len(dog_samples)
     n = len(cat_samples)
-    
+
     print(f"cat: {len(cat_samples)} , dogs: {len(dog_samples)}")
 
     train_samples = cat_samples[:int(n*0.8)] +  dog_samples[:int(n*0.8)]
@@ -53,7 +53,7 @@ def get_train_val_test_data(batch_size=4):  # dataloader
 
     #MEAN, STD = (0.485, 0.456, 0.406), (0.229, 0.224, 0.225) # mean and std for ImageNet
     #normalize = transforms.Normalize(mean=MEAN, std=STD)
-    
+
     # a set of common trasnformation combination for training
     train_transform = transforms.Compose([
         transforms.Resize((400,400)),
@@ -84,5 +84,6 @@ def get_train_val_test_data(batch_size=4):  # dataloader
     return train_loader,val_loader ,test_loader
 
 
-train_loader, val_loader, test_loader = get_train_val_test_data()
+#train_loader, val_loader, test_loader = get_train_val_test_data()
+
 
