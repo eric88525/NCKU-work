@@ -14,13 +14,14 @@ import pickle
 import copy
 
 train_config = {
-    "model_name": "res-mask",
+    "model_name": "tt",
     "batch_size": 32,
     "learning_rate": 0.001,
-    "epoch": 10,
+    "epoch": 6,
     "device": torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu"),
     "momentum": 0.9,
-    "weight_decay": 1e-4
+    "weight_decay": 1e-4,
+    "predtrained":False
 }
 
 class cd_Dataset(Dataset):
@@ -64,7 +65,7 @@ class cd_Dataset(Dataset):
         img[ye:ye+he,xe:xe+we,:] = [125, 122,114]
         return img
 
-def get_train_val_test_data(batch_size=4 , only_test_dataset = False):  # dataloader
+def get_train_val_test_data(batch_size=4 , only_test_dataset = False , mask=False):  # dataloader
 
     MEAN, STD = (0.485, 0.456, 0.406), (0.229, 0.224, 0.225) # mean and std for ImageNet
     normalize = transforms.Normalize(mean=MEAN, std=STD)
@@ -122,11 +123,11 @@ def get_train_val_test_data(batch_size=4 , only_test_dataset = False):  # datalo
 
 class Res50_CD(nn.Module):  # classifier model
 
-    def __init__(self):
+    def __init__(self , pretrained=False):
         super(Res50_CD, self).__init__()
 
         self.classifier = nn.Sequential(
-            models.resnet50(pretrained=False),
+            models.resnet50(pretrained=pretrained),
             nn.Linear(1000, 2)
         )
 
@@ -134,13 +135,13 @@ class Res50_CD(nn.Module):  # classifier model
         return self.classifier(inp)
 
 
-def train(train_config, train_loader, eval_loader, test_loader=None):
+def train(train_config, train_loader, eval_loader, test_loader):
 
-    model = Res50_CD()
+    model = Res50_CD(pretrained=train_config['predtrained'])
     model.train()
     model.to(train_config["device"])
 
-    writer = SummaryWriter()
+    writer = SummaryWriter(log_dir = f"./runs/{train_config['model_name']}")
 
     parameters = filter(lambda p: p.requires_grad, model.parameters())
 
@@ -182,7 +183,7 @@ def train(train_config, train_loader, eval_loader, test_loader=None):
             train_datacount += x.shape[0]
             accuracy += (predicted == y).sum().item()
 
-            writer.add_scalar('Loss/train',  epoch_loss / len(train_loader), n_iter)
+            writer.add_scalar('Loss/train', batch_loss.item(), n_iter)
             n_iter += 1
 
             epoch_iter.set_description(
@@ -202,7 +203,9 @@ def train(train_config, train_loader, eval_loader, test_loader=None):
 
     print("testing...")
     test_acc = test(model , test_loader)
-    writer.add_scalar("Acc/test" , test_acc)
+    writer.add_scalar("Acc/test" , test_acc ,0)
+    print("test acc " , test_acc)
+    
 
 # given model & test_loader , return loss & acc
 def test(model, test_loader):
@@ -219,11 +222,26 @@ def test(model, test_loader):
     return  acc_count / test_count
 
 def main():
+    # pre
+    train_config["model_name"] = "pretrained"
+    train_config["predtrained"] = True
     train_loader, val_loader, test_loader = get_train_val_test_data(
-        batch_size=train_config["batch_size"])
+        batch_size=train_config["batch_size"] , mask=False)
     train(train_config, train_loader, val_loader,test_loader)
-
+    # no pre
+    train_config["model_name"] = "no_pretrained"
+    train_config["predtrained"] = False
+    train_loader, val_loader, test_loader = get_train_val_test_data(
+        batch_size=train_config["batch_size"] , mask=False)
+    train(train_config, train_loader, val_loader,test_loader)
+    # no pre + mask
+    train_config["model_name"] = "mask"
+    train_config["predtrained"] = False
+    train_loader, val_loader, test_loader = get_train_val_test_data(
+        batch_size=train_config["batch_size"] , mask=True)
+    train(train_config, train_loader, val_loader,test_loader)
 
 if __name__ == "__main__":
     from torch.utils.tensorboard import SummaryWriter
+
     main()
