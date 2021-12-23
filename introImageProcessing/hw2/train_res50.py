@@ -4,6 +4,7 @@ import torch.nn as nn
 from torch.utils.data import Dataset , DataLoader
 from torchvision import transforms
 import torchvision.models as models
+import cv2
 
 from torchvision import datasets, transforms
 from PIL import Image
@@ -13,7 +14,7 @@ import pickle
 import copy
 
 train_config = {
-    "model_name": "res-v1",
+    "model_name": "res-mask",
     "batch_size": 32,
     "learning_rate": 0.001,
     "epoch": 10,
@@ -31,11 +32,15 @@ class cd_Dataset(Dataset):
         return len(self.samples)
 
     def __getitem__(self, index):
+        img = cv2.imread(self.samples[index][0])
 
-        img = Image.open(self.samples[index][0])
+        if isinstance(img,type(None)): # error image
+            img = cv2.imread(self.samples[0][0])
 
-        if img.mode != "RGB":
-            img = img.convert("RGB")
+        if img.shape[-1] != 3:
+            img = cv2.cvtColor(img,cv2.COLOR_GRAY2RGB)        
+
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         if self.mask:
             img = self.random_mask(img)
@@ -47,8 +52,7 @@ class cd_Dataset(Dataset):
     def random_mask(self , img, p= 0.5, sl = 0.02, sh = 0.4, r1 = 0.3):
         if np.random.uniform(0, 1) > p:
             return img
-        img = np.asarray(img, dtype=np.uint8)
-        # the PIL read file format is (H,W,3)
+        # the cv2 read file format is (H,W,3)
         H,W = img.shape[0] , img.shape[1]
         area = W*H
         se = np.random.uniform(sl,sh) * area
@@ -58,7 +62,6 @@ class cd_Dataset(Dataset):
         xe = int(np.random.uniform(0,W))
         ye = int(np.random.uniform(0,H))
         img[ye:ye+he,xe:xe+we,:] = [125, 122,114]
-        img = Image.fromarray(img,"RGB")
         return img
 
 def get_train_val_test_data(batch_size=4 , only_test_dataset = False):  # dataloader
@@ -68,6 +71,7 @@ def get_train_val_test_data(batch_size=4 , only_test_dataset = False):  # datalo
 
     # a set of common trasnformation combination for training
     train_transform = transforms.Compose([
+        transforms.ToPILImage(),
         transforms.Resize(256),
         transforms.CenterCrop(224),
         transforms.ToTensor(),
@@ -76,6 +80,7 @@ def get_train_val_test_data(batch_size=4 , only_test_dataset = False):  # datalo
 
     # transformations for testing do not need to do fancy tricks
     test_transform = transforms.Compose([
+        transforms.ToPILImage(),
         transforms.Resize(256),
         transforms.CenterCrop(224),
         transforms.ToTensor(),
@@ -121,7 +126,7 @@ class Res50_CD(nn.Module):  # classifier model
         super(Res50_CD, self).__init__()
 
         self.classifier = nn.Sequential(
-            models.resnet50(pretrained=True),
+            models.resnet50(pretrained=False),
             nn.Linear(1000, 2)
         )
 

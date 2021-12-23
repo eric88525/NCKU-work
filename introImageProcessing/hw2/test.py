@@ -83,7 +83,13 @@ def get_train_val_test_data(batch_size=4):  # dataloader
     
     return train_loader,val_loader ,test_loader
 
+img = cv2.imread("/home/q56104076/projects/NCKU-work/introImageProcessing/hw2/PetImages/Dog/5736.jpg")
+if img == None:
+    
+    print("gdfagfdfdgsdfgssfdg")
+print(img)
 
+cv2.imshow("123",img)
 #train_loader, val_loader, test_loader = get_train_val_test_data()
 
 
