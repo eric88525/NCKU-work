@@ -21,7 +21,7 @@ class Q5(QtWidgets.QMainWindow, QtWidgets.QDialog):
 
         # load model & record
         self.load_model_and_record(
-            record_path="tensorboard_record.png", model_path="res-v1.pt")
+            record_path="tensorboard.png", model_path="pretrained.pt")
 
         # buttons
         self.showModelStructureButton.clicked.connect(self.showModelStructure)
@@ -32,7 +32,7 @@ class Q5(QtWidgets.QMainWindow, QtWidgets.QDialog):
 
         self.show()
 
-    def load_model_and_record(self, record_path="loss_vgg-epo30.pkl", model_path="vgg-epo30.pt"):
+    def load_model_and_record(self, record_path, model_path):
 
         # read train/test record
         self.tensorboard_img = cv2.imread(record_path)
@@ -54,7 +54,6 @@ class Q5(QtWidgets.QMainWindow, QtWidgets.QDialog):
             img = cv2.imread(test_dataset.samples[idx][0])
             inp ,_ = test_dataset[idx]
             inp = inp.unsqueeze(0)
-            print(inp.shape)
             try:
                 pred = torch.argmax(self.model( inp ) , dim = -1)
                 print(pred)
@@ -68,8 +67,10 @@ class Q5(QtWidgets.QMainWindow, QtWidgets.QDialog):
 
 
     def DataArgument(self):
-        img = Image.open("PetImages/Cat/2.jpg")
-        img.show()
+        plt.bar(["Before Random-Erasing" , "After Random-Erasing"], [0.727,0.742],width=0.5 )
+        plt.ylabel('Acc')
+        plt.show()
+
 
 
 if __name__ == "__main__":

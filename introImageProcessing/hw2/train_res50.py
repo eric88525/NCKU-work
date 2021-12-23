@@ -39,7 +39,7 @@ class cd_Dataset(Dataset):
             img = cv2.imread(self.samples[0][0])
 
         if img.shape[-1] != 3:
-            img = cv2.cvtColor(img,cv2.COLOR_GRAY2RGB)        
+            img = cv2.cvtColor(img,cv2.COLOR_GRAY2RGB)
 
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
@@ -228,12 +228,14 @@ def main():
     train_loader, val_loader, test_loader = get_train_val_test_data(
         batch_size=train_config["batch_size"] , mask=False)
     train(train_config, train_loader, val_loader,test_loader)
+
     # no pre
     train_config["model_name"] = "no_pretrained"
     train_config["predtrained"] = False
     train_loader, val_loader, test_loader = get_train_val_test_data(
         batch_size=train_config["batch_size"] , mask=False)
     train(train_config, train_loader, val_loader,test_loader)
+
     # no pre + mask
     train_config["model_name"] = "mask"
     train_config["predtrained"] = False
