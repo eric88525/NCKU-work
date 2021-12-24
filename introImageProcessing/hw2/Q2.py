@@ -59,10 +59,8 @@ class mainPage(QtWidgets.QMainWindow, QtWidgets.QDialog):
         for img in self.imgs:
             uds = cv2.undistort(img, self.intrinsic_matrix, self.distortion_coefficients)
             print(uds.shape)
-            cv2.imshow("2-5 origin" , cv2.resize(img , (400,400)))
-            cv2.moveWindow("2-5 origin", self.geometry().x() - 200, self.geometry().y())
-            cv2.imshow("2-5 undistort",cv2.resize(uds , (400,400)) )
-            cv2.moveWindow("2-5 undistort", self.geometry().x() + 200, self.geometry().y())
+            image_h = cv2.hconcat([cv2.resize(img , (400,400)), cv2.resize(uds , (400,400))])
+            cv2.imshow("2-5 origin & undistort" , image_h )
             cv2.waitKey(500)
         cv2.destroyAllWindows()
 
