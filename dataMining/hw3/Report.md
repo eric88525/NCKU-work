@@ -20,15 +20,15 @@ pipenv install
 │   ├── graph_5.txt
 │   ├── graph_6.txt
 │   └── ibm-5000.txt
-├── main.ipynb      // just run it
+├── main.ipynb      // main program
 ├── Pipfile
 ├── report_imgs     // the img that report need
-├── Report.md       // you're watch this
-└── result          // output result to here
+├── Report.md       
+└── result          // output result under this folder
 ```
 
 ## code structure
-There's only one class in my code, first build the graph,and then run algorithm
+There's only one class in main.ipynb , first build the graph,and then run algorithm
 ```python
 class Graph():
     def __init__(self , graph_data:list ) -> None:
@@ -183,13 +183,20 @@ def hits_algorithm(self , iter):
 
 
 
-# 4. Experiment
-###  parameters setup
+# 4. Result of algorithm
+##  4-1 parameters setup
 + for every experiments
   + damping factor d = **0.15**
   + dacay factor C = **0.9**
   + iterration = **100**
 
+## 4-2 discussion
+>  graph 1 - 3
+<p float="left">
+    <img src="./report_imgs/q1-1.png" width="300" />
+    <img src="./report_imgs/q2-1.png" width="300" /> 
+    <img src="./report_imgs/q3-1.png" width="300" /> 
+</p>
 
 ```python
 Dataset [./dataset/graph_1.txt]
@@ -208,6 +215,7 @@ SimRank:
  [0. 0. 0. 0. 1. 0.]
  [0. 0. 0. 0. 0. 1.]]
 
+在G1中，因為node 1 沒有被任何引用因此Auth score為0，node 6沒有引用任何node 因此hub score為0，SimRank的部分，由於沒有任何兩點是有共同被引用，因此結果為對角矩陣
 ================================
 
 Dataset [./dataset/graph_2.txt]
@@ -225,6 +233,7 @@ SimRank:
  [0. 0. 0. 1. 0.]
  [0. 0. 0. 0. 1.]]
 
+在G2，SimRank同上。由於是循環圖，因此 Auth、Hub、PageRank score每個項目都是一樣的分數
 ================================
 
 Dataset [./dataset/graph_3.txt]
@@ -241,7 +250,55 @@ SimRank:
  [0.81818182 0.         1.         0.        ]
  [0.         0.81818182 0.         1.        ]]
 
+在G3PageRank score在2和4很高，是因為3同時引用2和4，而1和3的相似度很高也是因為兩者同時被2引用
 ================================
 ```
 
-# 5 Finding the relation of adding edges and 
+# 5 Find a way
+
+## 5-1 Graph 1
+
+<p float="left">
+  <img src="./report_imgs/q1-1.png" width="300" />
+  <img src="./report_imgs/q1-2.png" width="300" /> 
+</p>
+
+![]()
+```
+Before:
+	Hub [0.2 0.2 0.2 0.2 0.2 0. ] Auth [0.  0.2 0.2 0.2 0.2 0.2] 
+	PageRank [0.061 0.112 0.156 0.193 0.225 0.252]
+After:
+	Hub [0.  0.  0.  0.5 0.5 0. ] Auth [0.5  0.   0.   0.   0.25 0.25] 
+	PageRank [0.181 0.191 0.201 0.209 0.127 0.092]
+```
+## 5-2 Graph 2
+
+<p float="left">
+  <img src="./report_imgs/q2-1.png" width="300" />
+  <img src="./report_imgs/q2-2.png" width="300" /> 
+</p>
+
+```
+Before:
+	Hub [0.2 0.2 0.2 0.2 0.2] Auth [0.2 0.2 0.2 0.2 0.2] 
+	PageRank [0.2 0.2 0.2 0.2 0.2]
+After:
+	Hub [0.147 0.    0.558 0.147 0.147] Auth [0.264 0.264 0.    0.209 0.264] 
+	PageRank [0.22  0.273 0.262 0.086 0.159]
+```
+## 5-3 Graph 3
+
+<p float="left">
+  <img src="./report_imgs/q3-1.png" width="300" />
+  <img src="./report_imgs/q3-2.png" width="300" /> 
+</p>
+
+```
+Before:
+	Hub [0.191 0.309 0.309 0.191] Auth [0.191 0.309 0.309 0.191] 
+	PageRank [0.175 0.325 0.325 0.175]
+After:
+	Hub [0.079 0.298 0.324 0.298] Auth [0.41  0.18  0.266 0.144] 
+	PageRank [0.301 0.36  0.235 0.104]
+```
