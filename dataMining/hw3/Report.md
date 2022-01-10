@@ -28,11 +28,11 @@ pipenv install
 ```
 
 ## code structure
-There's only one class in main.ipynb , first build the graph,and then run algorithm
+There's only one class, first build the graph object ,and then run algorithm
 ```python
 class Graph():
     def __init__(self , graph_data:list ) -> None:
-        # init auth and hub matrix , index
+        # init in-node and out-node dictionary
         self.init_graph(graph_data)
 
     def init_graph(self , graph_data:list)->None:
@@ -69,6 +69,8 @@ simrank = graph.simrank_algorithm(iter=ITER,C = DECAY_FACTOR_C)
 
 
 # 1. Page rank 
++ 特點:把當前節點ｉ所引用的其他節點ｊ去計算關聯分數，但如果那個節點引用了太多其他節點，貢獻的分數將不高
+
 ## formula
 $PR(p_i)=\frac{1-d}{N}+d*  \sum_{p_j\in in(p_i)}\frac{PR(p_j)}{|out(p_j)|}$
 
@@ -76,7 +78,6 @@ d: damping factor = 0.1~0.15
 ## flow
 1. For every node **i** , update new page rank $PR(p_i)$ as the sum of every j $\frac{PR(p_j)}{|out(p_j)|}$ where **j** is the node that **i** point to.
 2. scale result by damping factor
-
 ## implement
 ```python
 def pagerank_algorithm(self,iter , d):
@@ -99,6 +100,7 @@ def pagerank_algorithm(self,iter , d):
 ```
 
 # 2. SimRank
++ 相似度的計算是由兩者是否被同一個節點所引用而來
 
 ## formula
 $S(a,b)=\frac{C}{|I(a)||I(b)}\sum_{i=1}^{|I(a)|}\sum_{j=1}^{|I(b)|}S(I_i(a),\ I_j(b))$
@@ -115,7 +117,6 @@ C is damping factor , CÎ[0, 1]
    + else, go to step 2
 2. update sim rank score by formula
 3. scale result by damping factor
-
 ## inplement
 ```python
 def simrank_algorithm(self,iter,C):
@@ -152,7 +153,7 @@ def get_simrank_score( self,node_a,node_b,old_simrank_matrix , C)->float:
 
 
 # 3. Hits
-
++ 單純的去計算引用別人和被引用的次數
 ## flow
 1. Assign each node an authority and hub score to 1.
 2. Update authority scores: each node's authority score is the sum of hubs score of each node that point to it.
@@ -191,6 +192,7 @@ def hits_algorithm(self , iter):
   + iterration = **100**
 
 ## 4-2 discussion
+詳細討論寫在底下
 >  graph 1 - 3
 <p float="left">
     <img src="./report_imgs/q1-1.png" width="300" />
@@ -255,7 +257,7 @@ SimRank:
 ```
 
 # 5 Find a way
-
+嘗試增加一些連結來改變不同演算法的輸出，輸出在main.ipynb
 ## 5-1 Graph 1
 
 <p float="left">
@@ -302,3 +304,20 @@ After:
 	Hub [0.079 0.298 0.324 0.298] Auth [0.41  0.18  0.266 0.144] 
 	PageRank [0.301 0.36  0.235 0.104]
 ```
+
+# 6. Effectiveness analysis
+可預期隨著節點或是邊愈多，跑各種演算法的時間將會成長，因為需要計算更多的in-node和out-node關係
++ Hit algorithm受到nodes數量影響最大，光是增加一個node，運算時間就變兩倍了
++ 其他二種算法則要看edge是否有大量相連
+
+|graph|nodes|edges|hit|page|sim|
+|-|-|-|-|-|-|
+|1|6|5|0.005522|0.001014|0.003804|
+|2|5|5|0.002604|0.000973|0.003785|
+|3|4|6|0.002190|0.000992|0.002966|
+|4|7|18|0.003472|0.001681|0.015087|
+|5|469|1102|0.194344|0.075767|71.260763|
+
+# 7. Discussion and experience 
+
+
