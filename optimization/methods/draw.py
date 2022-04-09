@@ -6,3 +6,7 @@ def draw_plt(x_list: list, y_list: list, x_range: list, y_range: list, method_na
     plt.axis(x_range + y_range)
     plt.title(f"{method_name} min: f({x_list[-1]:.3f}) = {y_list[-1]:.3f}")
     plt.show()
+
+
+def draw_2d(travel:list, method_name:str):
+    
