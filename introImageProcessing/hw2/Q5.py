@@ -43,8 +43,8 @@ class Q5(QtWidgets.QMainWindow, QtWidgets.QDialog):
         self.model.eval()
 
     def showModelStructure(self):
-        summary(self.model, (3, 32, 32))
-
+        #summary(self.model, (3, 32, 32))
+        print(self.model)
     def showTensorboard(self):
         cv2.imshow("Q5-2" , self.tensorboard_img)
 
