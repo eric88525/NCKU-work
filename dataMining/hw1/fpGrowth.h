@@ -29,7 +29,7 @@ class fpTree
 {
 public:
     treeNode *root;
-    int minSup;
+    float minSup;
 
     // the item frequency
     map<string, int> frequency;
@@ -41,7 +41,7 @@ public:
     vector<string> itemOrder;
 
     // init
-    fpTree(int minSup)
+    fpTree(float minSup)
     {
         this->minSup = minSup;
         this->frequency = {};
@@ -58,7 +58,7 @@ public:
     void removeUnFreq(vector<string> &transation);
 
     // add tree node
-    void addNode(const vector<vector<string>> &transations);
+    void addNodes(const vector<vector<string>> &transations);
 
     // list all item from high freq to low freq & remove unfreq item
     void createOrder();
@@ -122,14 +122,14 @@ int fpTree::partition(vector<string> &arr, int low, int high)
 
     for (int j = low; j < high; j++)
     {
-        if (this->frequency[arr[j]] > pivot || (this->frequency[arr[j]] == pivot && arr[j].compare(arr[high]) == 1))
+        if (frequency[arr[j]] > pivot || (frequency[arr[j]] == pivot && arr[j].compare(arr[high]) < 0))
         {
             i++;
             swap(arr[i], arr[j]);
         }
     }
     swap(arr[i + 1], arr[high]);
-    return i + 1;
+    return i+1;
 }
 
 // remove item if it's support < minSupport
@@ -145,18 +145,15 @@ void fpTree::removeUnFreq(vector<string> &transation)
 }
 
 // add tree node
-void fpTree::addNode(const vector<vector<string>> &transations)
+void fpTree::addNodes(const vector<vector<string>> &transations)
 {
     for (auto transation : transations)
     {
-        treeNode *p = root;
-        treeNode *parent = p;
-
+        treeNode *p = this->root;
         removeUnFreq(transation);
-
         sortByFreq(transation, 0, transation.size() - 1);
 
-        for (auto item : transation)
+        for (const auto &item : transation)
         {
 
             if (p->childs.count(item))
@@ -167,14 +164,13 @@ void fpTree::addNode(const vector<vector<string>> &transations)
             else
             {
                 // create new node
-                parent = p;
+                treeNode *parent = p;
                 treeNode *newItem = new treeNode(parent, item);
 
                 // let nextHomonym point to previous item
                 if (itemPointers.count(item))
-                {
                     newItem->nextHomonym = itemPointers[item];
-                }
+
                 itemPointers[item] = newItem;
 
                 // go to child
@@ -191,13 +187,9 @@ void fpTree::createOrder()
     vector<string> allItems;
 
     for (const auto &i : this->frequency)
-    {
-        string temp = i.first;
-        allItems.push_back(temp);
-    }
+        allItems.push_back(i.first);
 
     sortByFreq(allItems, 0, allItems.size() - 1);
-
     this->itemOrder = allItems;
 }
 
@@ -205,29 +197,23 @@ void fpTree::createOrder()
 void fpTree::buildTree(const vector<vector<string>> &datas)
 {
 
-    map<string, int> temp;
+    map<string, int> itemCounts;
 
-    //count item support count
+    // count item support count
     for (const auto &transation : datas)
-    {
         for (const auto &item : transation)
-        {
-            temp[item]++;
-        }
-    }
+            itemCounts[item]++;
 
     this->frequency.clear();
 
     // add freq one item to frequency
-    for (auto i : temp)
+    for (auto i : itemCounts)
     {
         if (i.second >= this->minSup)
-        {
             this->frequency[i.first] = i.second;
-        }
     }
     createOrder();
-    addNode(datas);
+    addNodes(datas);
 }
 
 // find freq itemset
@@ -235,10 +221,10 @@ vector<assoInfo> fpTree::fpMining(assoInfo history)
 {
 
     vector<assoInfo> result;
-    // item order is from high to low , so reverse it
-    reverse(this->itemOrder.begin(), this->itemOrder.end());
+    // rItemOrder is reverse itemOrder
+    vector<string> rItemOrder(this->itemOrder.rbegin(), this->itemOrder.rend());
 
-    for (auto const item : this->itemOrder)
+    for (auto const &item : rItemOrder)
     {
         // make a copy of history
         assoInfo newHistory = history;
@@ -246,7 +232,7 @@ vector<assoInfo> fpTree::fpMining(assoInfo history)
         // add current item
         newHistory.itemSet.insert(item);
 
-        newHistory.support = this->frequency[item];
+        newHistory.appearCount = this->frequency[item];
 
         result.push_back(newHistory);
 
@@ -267,36 +253,35 @@ fpTree fpTree::condTree(string item)
 {
 
     treeNode *n = itemPointers[item];
-    fpTree tree(this->minSup);
 
     vector<vector<string>> newTransations;
 
+    // go throught all tree node which node.item == item
     while (n)
     {
         int pCount = n->count;
 
         // parent nodes
-        vector<string> preNodes;
+        vector<string> parentNodes;
 
         treeNode *p = n->parent;
 
         while (p->item != "root")
         {
-            preNodes.push_back(p->item);
+            parentNodes.push_back(p->item);
             p = p->parent;
         }
 
-        if (preNodes.size())
+        if (parentNodes.size())
         {
             while (pCount--)
-            {
-                newTransations.push_back(preNodes);
-            }
+                newTransations.push_back(parentNodes);
         }
-
         n = n->nextHomonym;
     }
 
+    // create cond tree
+    fpTree tree(this->minSup);
     tree.buildTree(newTransations);
 
     return tree;

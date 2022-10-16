@@ -1,15 +1,16 @@
 #include "association.h"
 
 // apriori
-vector<assoInfo> apriori(const vector<vector<string>> &data, int minSup)
+vector<assoInfo> apriori(const vector<vector<string>> &data, float minSup)
 {
     // return result
     vector<assoInfo> result;
 
-    // lookup table of transations
+    // dictionary format transations, for example:
+    // [{"apple":1, "banana":1, "orange":1}, {"apple":1, "banana":1, "orange":1}]
     vector<map<string, int>> transations;
     // count base item
-    map<string, int> oneItemDict;
+    map<string, int> itemCounts;
 
     // count base item &  save transations for lookup
     for (const vector<string> &t : data)
@@ -17,82 +18,80 @@ vector<assoInfo> apriori(const vector<vector<string>> &data, int minSup)
         map<string, int> tmap;
         for (const auto &item : t)
         {
-            oneItemDict[item]++;
+            itemCounts[item]++;
             tmap[item]++;
         }
-
         transations.push_back(tmap);
         // transations.push_back(set<string>(t.begin(), t.end()));
     }
 
-    // one item to add
-    set<string> tempBaseItem;
+    vector<string> baseItems;
+    int lastidx = 0;
+
+    // the index of item in baseItems, for example:
+    // baseItems = ["apple", "banana", "orange"]
+    // itemIndex = {"apple":0, "banana":1, "orange":2}
+    map<string, int> itemIndex;
+
     // add freq one item to baseItems
-    for (const auto &item : oneItemDict)
+    for (const auto &item : itemCounts)
     {
-        // one item > minsup
         if (item.second >= minSup)
         {
-            tempBaseItem.insert(item.first);
+            baseItems.push_back(item.first);
+            itemIndex[item.first] = lastidx++;
         }
     }
 
-    vector<string> baseItems;
-    map<string, int> lastIndex;
-    int lastidx = 0;
-    for (const auto &s : tempBaseItem)
-    {
-        baseItems.push_back(s);
-        lastIndex[s] = lastidx++;
-    }
-
     // generate rule
-    queue<assoInfo> freqItemSet;
+    queue<assoInfo> itemSet;
 
     for (string item : baseItems)
     {
-        assoInfo asso(set<string>({item}), oneItemDict[item]);
-        freqItemSet.push(asso);
-        result.push_back(asso);
+        assoInfo asso(set<string>({item}), itemCounts[item]);
+        itemSet.push(asso);
+        result.push_back(asso); // add one frequent itemset to result
     }
 
-    while (freqItemSet.size())
+    while (itemSet.size())
     {
-        int n = freqItemSet.size();
+        int n = itemSet.size();
         while (n--)
         {
-            auto it = freqItemSet.front().itemSet.end();
+            // get last item in itemset
+            auto it = itemSet.front().itemSet.end();
             it--;
-            int startIdx = lastIndex[*it] + 1;
 
-            for (int i = startIdx; i < baseItems.size(); i++)
+            for (int i = itemIndex[*it] + 1; i < baseItems.size(); i++)
             {
-                assoInfo tempAsso = freqItemSet.front();
-                tempAsso.support = 0;
-                tempAsso.itemSet.insert(baseItems[i]);
+                assoInfo items = itemSet.front();
+
+                items.appearCount = 0;
+                items.itemSet.insert(baseItems[i]);
 
                 for (const auto &trans : transations)
                 {
-                    bool ok = true;
-                    for (const auto &s : tempAsso.itemSet)
+                    bool notInTrans = false;
+                    // loop through all the item in itemSet
+                    for (const auto &s : items.itemSet)
                     {
-                        if (!trans.count(s))
+                        if (!trans.count(s)) // tras not contain item
                         {
-                            ok = false;
+                            notInTrans = true;
                             break;
                         }
                     }
-                    if (ok)
-                        tempAsso.support++;
+                    if (!notInTrans)
+                        items.appearCount++;
                 }
 
-                if (tempAsso.support >= minSup)
+                if (items.appearCount >= minSup)
                 {
-                    result.push_back(tempAsso);
-                    freqItemSet.push(tempAsso);
+                    result.push_back(items);
+                    itemSet.push(items);
                 }
             }
-            freqItemSet.pop();
+            itemSet.pop();
         }
     }
     return result;

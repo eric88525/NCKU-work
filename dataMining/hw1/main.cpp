@@ -5,22 +5,16 @@
 vector<vector<string>> readIBMData(string filePath)
 {
     string id, tranID, item;
-
     ifstream infile(filePath);
-
     map<string, vector<string>> datas;
-
-    while (infile >> id >> tranID >> item)
-    {
-        datas[tranID].push_back(item);
-    }
-
     vector<vector<string>> result;
 
+    while (infile >> id >> tranID >> item)
+        datas[tranID].push_back(item);
+
     for (auto &d : datas)
-    {
         result.push_back(d.second);
-    }
+
     return result;
 }
 
@@ -33,49 +27,49 @@ vector<vector<string>> readKaggleData(string filepath)
     map<string, vector<string>> datas;
 
     while (getline(infile, inp))
-    {
         datas[inp.substr(0, inp.find(','))].push_back(inp.substr(inp.find(',') + 1));
-    }
 
     vector<vector<string>> result;
     for (auto &d : datas)
-    {
         result.push_back(d.second);
-    }
 
+    infile.close();
     return result;
 }
 
 // print result to file
-void printResult(const vector<assoInfo> &freqSet, string setPath, string rulePath, float minSupport, float minConfidence, float transCount)
+void resultToFile(vector<assoInfo> &freqSet, string freqPath, string rulePath, float minSupport, float minConfidence, float transCount)
 {
-    ofstream myfile;
-    myfile.open(setPath);
 
     int totalRules = 0;
 
     map<string, float> ruleCount;
 
-    ofstream rulefile;
-    rulefile.open(rulePath);
+    ofstream freqFile;
+    freqFile.open(freqPath);
+
+    sort(freqSet.begin(), freqSet.end(), [](assoInfo &a, assoInfo &b)
+         { return a.appearCount > b.appearCount; });
 
     cout << "[freqSet] = " << freqSet.size() << "\n";
     // create itemset:freq map
-    rulefile << "count | itemSet\n";
+    freqFile << "count | itemSet\n";
     for (const auto &fSet : freqSet)
     {
         string k = "";
         for (const auto &item : fSet.itemSet)
             k += item + ", ";
 
-        ruleCount[k] = fSet.support;
+        ruleCount[k] += fSet.appearCount;
 
-        rulefile << setw(5) << setprecision(4) << fSet.support << " | { " << k << "}\n";
+        freqFile << setw(5) << setprecision(4) << fSet.appearCount << " | { " << k << "}\n";
     }
-    rulefile.close();
+    freqFile.close();
 
-    myfile << " Sup  | Conf  | Rule\n";
-    myfile << "====================\n";
+    ofstream ruleFile;
+    ruleFile.open(rulePath);
+    ruleFile << " Sup  | Conf  | Rule\n";
+    ruleFile << "====================\n";
 
     //  confidence filter & print reuslt to file
     for (const auto &itSet : freqSet)
@@ -85,29 +79,37 @@ void printResult(const vector<assoInfo> &freqSet, string setPath, string rulePat
         for (const auto &comb : allCombs)
         {
 
-            float sup = float(itSet.support) / transCount;
-            float confi = float(itSet.support) / ruleCount[comb.first];
+            string leftRule = "";
+            for (const auto &item : comb.first)
+                leftRule += item + ", ";
+
+            string rightRule = "";
+            for (const auto &item : comb.second)
+                rightRule += item + ", ";
+
+            float sup = float(itSet.appearCount) / float(transCount);
+            float confi = float(itSet.appearCount) / float(ruleCount[leftRule]);
 
             if (confi > 1)
                 cout << "wrong\n";
 
-            if (confi < minConfidence || sup < minSupport)
+            if (confi < minConfidence)
                 continue;
 
-            myfile << setprecision(5) << setw(5) << sup << " | " << setprecision(5) << setw(5) << confi << " | ";
-            myfile << "{ " << comb.first << "} => { " << comb.second << "}\n";
+            ruleFile << setprecision(5) << setw(5) << sup << " | " << setprecision(5) << setw(5) << confi << " | ";
+            ruleFile << "{ " << leftRule << "} => { " << rightRule << "}\n";
 
             totalRules++;
         }
     }
-    myfile << "====================\nTotal rules = " << totalRules << endl;
-    myfile.close();
+    ruleFile << "====================\nTotal rules = " << totalRules << endl;
+    ruleFile.close();
     cout << "[rules] = " << totalRules << "\n";
 }
 
 void test(string mode, const vector<vector<string>> &datas, float minSupport = 0.1, float confidence = 0.2)
 {
-    int mSup = int(minSupport * datas.size());
+    float mSup = datas.size() * minSupport;
     vector<assoInfo> freqItemSet;
 
     cout << "[mode] = " << mode << "\n";
@@ -139,38 +141,44 @@ void test(string mode, const vector<vector<string>> &datas, float minSupport = 0
 
     if (mode == "fp")
     {
-        printResult(freqItemSet, "./fp_result.txt", "./fp_rule.txt", minSupport, confidence, datas.size());
+        resultToFile(freqItemSet, "./fp_result.txt", "./fp_rule.txt", minSupport, confidence, datas.size());
     }
     else if (mode == "ap")
     {
-        printResult(freqItemSet, "./ap_result.txt", "./ap_rule.txt", minSupport, confidence, datas.size());
+        resultToFile(freqItemSet, "./ap_result.txt", "./ap_rule.txt", minSupport, confidence, datas.size());
     }
     cout << "=====================\n";
 }
 
 int main()
 {
+    /*
+        test (mode,datas,minSupport,confidence)
+        mode: ( fp or ap )
+        data: transation data
+        support: min support
+        confidence: min confidence
+    */
 
-    // test (mode,datas,minSupport,confidence)
-    // mode: ( fp or ap )
-    // data: transation data
-    // support: min support
-    // confidence: min confidence
-
-    // test on ibm data
+    //test on ibm data
     auto ibmData = readIBMData("./dataset/IBM2021.txt");
+    test("fp", ibmData, 0.01, 0.8);
+    test("ap", ibmData, 0.01, 0.8);
 
-    //test("ap", ibmData, 0.01, 0.8);
+    // auto testData = readIBMData("./dataset/toy.txt");
+    // test("fp", testData, 0.5, 0.8);
+    // test("ap", testData, 0.5, 0.8);
+
+    // auto testData = readIBMData("./dataset/dm_test.txt");
+    // test("fp", testData, 0.1, 0.1);
+    // test("ap", testData, 0.1, 0.1);
+
+    // test("ap", ibmData, 0.01, 0.8);
 
     // test on kaggle data
 
-    auto kaggleData = readKaggleData("./dataset/Groceries_dataset.txt");
-    //test("fp", kaggleData, 0.01, 0.001);
+    // auto kaggleData = readKaggleData("./dataset/Groceries_dataset.txt");
+    // test("fp", kaggleData, 0.01, 0.001);
     // test("ap", kaggleData, 0.01, 0.001);
 
-    vector<float> ss = {0.001, 0.005, 0.01};
-    for (auto s : ss)
-    {
-        test("fp", kaggleData, s, 0.1);
-    }
 }

@@ -8,7 +8,7 @@
 #include <set>
 #include <queue>
 #include <iomanip>
-#include <unordered_map>
+#include <map>
 #include <chrono>
 #include <stack>
 
@@ -21,28 +21,28 @@ public:
     // itemSet
     set<string> itemSet;
     // support count
-    int support;
+    int appearCount;
 
-    assoInfo() : itemSet({}), support(0) {}
-    assoInfo(set<string> itemSet, int support) : itemSet(itemSet), support(support) {}
+    assoInfo() : itemSet({}), appearCount(0) {}
+    assoInfo(set<string> itemSet, int appearCount) : itemSet(itemSet), appearCount(appearCount) {}
     assoInfo(const assoInfo &p1)
     {
         this->itemSet = p1.itemSet;
-        this->support = p1.support;
+        this->appearCount = p1.appearCount;
     }
 };
 
 // generate all  possible {a}=>{b} patterns and print support & confidence
 // given itemset { 1, 2, 3} , return all combination  of {} => {} ex. like {1}=>{2,3}
-vector<pair<string, string>> allCombination(const set<string> &freqItemSet)
+vector<pair<set<string>, set<string>>> allCombination(const set<string> &freqItemSet)
 {
-    vector<pair<string, string>> result;
+    vector<pair<set<string>, set<string>>> result;
 
-    queue<pair<string, string>> que;
+    queue<pair<set<string>, set<string>>> que;
 
     vector<string> itemSet(freqItemSet.begin(), freqItemSet.end());
 
-    que.push(make_pair("", ""));
+    que.push(make_pair(set<string>(), set<string>()));
 
     int index = 0;
 
@@ -56,8 +56,8 @@ vector<pair<string, string>> allCombination(const set<string> &freqItemSet)
             auto temp2 = que.front();
             que.pop();
 
-            temp1.first += itemSet[index] + ", ";
-            temp2.second += itemSet[index] + ", ";
+            temp1.first.insert(itemSet[index]);
+            temp2.second.insert(itemSet[index]);
 
             que.push(temp1);
             que.push(temp2);
@@ -66,7 +66,7 @@ vector<pair<string, string>> allCombination(const set<string> &freqItemSet)
     }
     while (que.size())
     {
-        if (que.front().first != "" && que.front().second != "")
+        if (que.front().first.size() && que.front().second.size())
             result.push_back(que.front());
         que.pop();
     }
