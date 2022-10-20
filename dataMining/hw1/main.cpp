@@ -4,6 +4,10 @@
 // get all transations
 vector<vector<string>> readIBMData(string filePath)
 {
+
+    cout << "==========================================\n";
+    cout << "IBM Dataset" << endl << filePath << endl;
+    cout << "==========================================\n";
     string id, tranID, item;
     ifstream infile(filePath);
     map<string, vector<string>> datas;
@@ -115,6 +119,7 @@ void test(string mode, const vector<vector<string>> &datas, float minSupport = 0
     cout << "[mode] = " << mode << "\n";
     cout << "[transations] = " << datas.size() << "\n";
     cout << "[minSup] = " << mSup << "\n";
+    cout << "[minConf] = " << confidence << "\n";
 
     // count time
     auto start = chrono::steady_clock::now();
@@ -138,7 +143,7 @@ void test(string mode, const vector<vector<string>> &datas, float minSupport = 0
     auto end = chrono::steady_clock::now();
     auto diff = end - start;
     cout << "[run time] = " << chrono::duration<double, milli>(diff).count() << " ms" << endl;
-
+    cout << ">>>>>>\n";
     if (mode == "fp")
     {
         resultToFile(freqItemSet, "./fp_result.txt", "./fp_rule.txt", minSupport, confidence, datas.size());
@@ -161,7 +166,11 @@ int main()
     */
 
     //test on ibm data
-    auto ibmData = readIBMData("./dataset/IBM2021.txt");
+    // auto ibmData = readIBMData("./dataset/IBM2021.txt");
+    // test("fp", ibmData, 0.01, 0.8);
+    // test("ap", ibmData, 0.01, 0.8);
+
+    auto ibmData = readIBMData("./dataset/IBM5000.txt");
     test("fp", ibmData, 0.01, 0.8);
     test("ap", ibmData, 0.01, 0.8);
 
