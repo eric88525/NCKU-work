@@ -11,7 +11,7 @@
 #include <map>
 #include <chrono>
 #include <stack>
-
+#include <unordered_map>
 using namespace std;
 
 // record the itemset ans it's support count
@@ -22,14 +22,18 @@ public:
     set<string> itemSet;
     // support count
     int appearCount;
-
+    // the possible transation id
+    set<int> possibleTrans;
+    
     assoInfo() : itemSet({}), appearCount(0) {}
     assoInfo(set<string> itemSet, int appearCount) : itemSet(itemSet), appearCount(appearCount) {}
     assoInfo(const assoInfo &p1)
     {
         this->itemSet = p1.itemSet;
         this->appearCount = p1.appearCount;
+        this->possibleTrans = p1.possibleTrans;
     }
+
 };
 
 // generate all  possible {a}=>{b} patterns and print support & confidence
